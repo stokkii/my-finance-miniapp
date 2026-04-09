@@ -10,23 +10,23 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', system-ui, sans-serif; }
         .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); }
-        .balance { font-size: 2.8rem; line-height: 1; letter-spacing: -2px; }
+        .balance { font-size: 2.9rem; line-height: 1; letter-spacing: -2px; }
     </style>
 </head>
-<body class="bg-zinc-950 text-white min-h-screen">
+<body class="bg-zinc-950 text-white">
 
-<div class="max-w-md mx-auto bg-zinc-950 flex flex-col min-h-screen">
+<div class="max-w-md mx-auto min-h-screen bg-zinc-950 flex flex-col">
 
-    <!-- HEADER + BALANCE (только на главной) -->
+    <!-- HEADER + BALANCE -->
     <div id="main-header" class="px-6 pt-12 pb-8 bg-gradient-to-b from-zinc-900 to-zinc-950">
         <div class="flex items-center gap-3">
-            <div id="user-avatar" class="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center text-2xl"></div>
-            <div id="user-name" class="font-semibold text-lg"></div>
+            <div id="avatar" class="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center text-2xl"></div>
+            <div id="username" class="font-semibold text-lg"></div>
         </div>
 
         <div class="text-center mt-10">
             <div id="balance" class="balance font-bold text-white"></div>
-            <div id="change" class="mt-2 text-lg font-medium"></div>
+            <div id="change" class="mt-3 text-xl font-medium"></div>
         </div>
 
         <div class="grid grid-cols-3 gap-3 mt-12">
@@ -38,8 +38,8 @@
 
     <div id="content" class="flex-1 px-5 pt-4 pb-24 overflow-y-auto"></div>
 
-    <!-- Bottom Navigation -->
-    <div class="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-md w-full bg-zinc-900 border-t border-zinc-700 flex justify-around py-3 text-xs">
+    <!-- Bottom nav -->
+    <div class="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-md w-full bg-zinc-900 border-t border-zinc-700 flex justify-around py-3 text-xs z-50">
         <div onclick="switchPage('dashboard')" class="flex-1 flex flex-col items-center text-emerald-400">🏠<br><span class="mt-1">Главная</span></div>
         <div onclick="switchPage('transactions')" class="flex-1 flex flex-col items-center text-zinc-400">📋<br><span class="mt-1">Операции</span></div>
         <div onclick="switchPage('categories')" class="flex-1 flex flex-col items-center text-zinc-400">📂<br><span class="mt-1">Категории</span></div>
@@ -48,8 +48,8 @@
     </div>
 </div>
 
-<!-- Add Modal -->
-<div id="add-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-end">
+<!-- Modal -->
+<div id="add-modal" class="hidden fixed inset-0 bg-black/80 z-[100] flex items-end">
     <div class="glass w-full rounded-t-3xl p-6"></div>
 </div>
 
@@ -107,6 +107,20 @@
         return {total, income, expense};
     }
 
+    function getBalanceHistory() {
+        const sorted = [...transactions].sort((a,b) => new Date(a.date) - new Date(b.date));
+        let balance = 0;
+        const history = [];
+        const dateMap = {};
+        sorted.forEach(tx => {
+            const baseAmt = getAmountInBase(tx.amount, tx.currency);
+            balance += tx.type === 'income' ? baseAmt : -baseAmt;
+            dateMap[tx.date] = balance;
+        });
+        Object.keys(dateMap).sort().forEach(d => history.push({date: d, balance: dateMap[d]}));
+        return history;
+    }
+
     function renderDashboard() {
         const {total, income, expense} = calculateTotals();
         const change = income - expense;
@@ -114,26 +128,25 @@
 
         const tg = window.Telegram?.WebApp || {};
         const user = tg.initDataUnsafe?.user || {};
-        document.getElementById('user-avatar').innerHTML = user.photo_url ? `<img src="${user.photo_url}" class="w-10 h-10 rounded-2xl">` : '👤';
-        document.getElementById('user-name').innerHTML = user.first_name || 'Пользователь';
-
-        document.getElementById('main-header').classList.remove('hidden');
+        document.getElementById('avatar').innerHTML = user.photo_url ? `<img src="${user.photo_url}" class="w-10 h-10 rounded-2xl object-cover">` : '👤';
+        document.getElementById('username').innerHTML = user.first_name || 'Пользователь';
 
         document.getElementById('balance').innerHTML = `${total.toFixed(0)} ${symbols[baseCurrency]}`;
         const changeEl = document.getElementById('change');
-        changeEl.innerHTML = `${change >= 0 ? '+' : ''}${change.toFixed(0)} ${symbols[baseCurrency]} <span class="text-sm">(${change >= 0 ? '+' : ''}${percent}%)</span>`;
-        changeEl.className = change >= 0 ? "mt-2 text-emerald-400" : "mt-2 text-red-400";
+        changeEl.innerHTML = `${change >= 0 ? '↑' : '↓'} ${Math.abs(change).toFixed(0)} ${symbols[baseCurrency]} <span class="text-sm">(${change >= 0 ? '+' : ''}${percent}%)</span>`;
+        changeEl.className = change >= 0 ? "text-emerald-400" : "text-red-400";
 
         let html = `
             <div class="space-y-8">
                 <div class="glass rounded-3xl p-6">
-                    <h2 class="mb-4 font-medium">Динамика баланса</h2>
-                    <canvas id="chart" height="180"></canvas>
+                    <h2 class="font-medium mb-4">Динамика баланса</h2>
+                    <canvas id="chart" height="200"></canvas>
                 </div>
-                <div class="px-1">
-                    <div class="flex justify-between mb-4">
+
+                <div>
+                    <div class="flex justify-between mb-4 px-1">
                         <h2 class="font-semibold">Последние операции</h2>
-                        <span onclick="switchPage('transactions')" class="text-violet-400">Все →</span>
+                        <span onclick="switchPage('transactions')" class="text-violet-400 cursor-pointer">Все →</span>
                     </div>
                     <div id="recent" class="space-y-3"></div>
                 </div>
@@ -148,31 +161,51 @@
         if (history.length > 1) {
             chartInstance = new Chart(ctx, {
                 type: 'line',
-                data: { labels: history.map(h => h.date), datasets: [{ data: history.map(h => h.balance), borderColor: '#67e8f9', borderWidth: 4, tension: 0.4, pointRadius: 0 }] },
-                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#27272a' } }, x: { grid: { color: '#27272a' } } } }
+                data: {
+                    labels: history.map(h => h.date),
+                    datasets: [{
+                        data: history.map(h => h.balance),
+                        borderColor: '#67e8f9',
+                        borderWidth: 5,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        fill: true,
+                        backgroundColor: 'rgba(103, 232, 249, 0.15)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { grid: { color: '#27272a' } }, x: { grid: { color: '#27272a' } } }
+                }
             });
+        } else {
+            ctx.getContext('2d').font = '500 16px Inter';
+            ctx.getContext('2d').fillStyle = '#64748b';
+            ctx.getContext('2d').textAlign = 'center';
+            ctx.getContext('2d').fillText('Добавьте операции — график появится', ctx.width/2, 100);
         }
 
         // Recent
-        const recent = [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,5);
+        const recent = [...transactions].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,5);
         let str = '';
         recent.forEach(tx => {
             const baseAmt = getAmountInBase(tx.amount, tx.currency);
             str += `
-            <div class="glass rounded-3xl p-5 flex justify-between">
+            <div class="glass rounded-3xl p-5 flex justify-between items-center">
                 <div class="flex gap-4">
-                    <span class="text-4xl">${tx.type === 'income' ? '💰' : '🛒'}</span>
+                    <span class="text-4xl">${tx.type==='income'?'💰':'🛒'}</span>
                     <div>
                         <div class="font-medium">${tx.category}</div>
                         <div class="text-xs text-zinc-400">${tx.date}</div>
                     </div>
                 </div>
-                <div class="text-right font-semibold ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}">
-                    ${tx.type === 'income' ? '+' : '-'}${baseAmt.toFixed(0)} ${symbols[baseCurrency]}
+                <div class="text-right font-semibold ${tx.type==='income'?'text-emerald-400':'text-red-400'}">
+                    ${tx.type==='income'?'+' : '-'}${baseAmt.toFixed(0)} ${symbols[baseCurrency]}
                 </div>
             </div>`;
         });
-        document.getElementById('recent').innerHTML = str || '<p class="text-center text-zinc-400 py-8">Нет операций</p>';
+        document.getElementById('recent').innerHTML = str || '<p class="text-center text-zinc-400 py-10">Нет операций. Добавьте первую выше.</p>';
     }
 
     function renderTransactions() {
@@ -195,21 +228,21 @@
                 </div>
             </div>`;
         });
-        container.innerHTML = str || '<p class="text-zinc-400 py-12 text-center">Пока нет операций</p>';
+        container.innerHTML = str || '<p class="text-zinc-400 text-center py-12">Пока пусто</p>';
     }
 
     function renderConverter() {
         let html = `
             <div class="px-2">
-                <h2 class="text-2xl font-semibold mb-6">Конвертер</h2>
+                <h2 class="text-2xl font-semibold mb-6">Конвертер валют</h2>
                 <div class="glass rounded-3xl p-6">
-                    <div class="flex gap-4 mb-6">
-                        <select id="from" onchange="updateConverter()" class="flex-1 py-4 px-5 bg-white/10 rounded-2xl">${currencies.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
-                        <button onclick="swap()" class="text-3xl">⇄</button>
-                        <select id="to" onchange="updateConverter()" class="flex-1 py-4 px-5 bg-white/10 rounded-2xl">${currencies.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+                    <div class="flex gap-4 mb-8">
+                        <select id="from" onchange="updateConverter()" class="flex-1 py-4 px-5 bg-white/10 rounded-2xl text-lg">${currencies.map(c => `<option value="${c}">${c} ${symbols[c]}</option>`).join('')}</select>
+                        <button onclick="swapCurr()" class="text-4xl text-violet-400">⇄</button>
+                        <select id="to" onchange="updateConverter()" class="flex-1 py-4 px-5 bg-white/10 rounded-2xl text-lg">${currencies.map(c => `<option value="${c}">${c} ${symbols[c]}</option>`).join('')}</select>
                     </div>
-                    <input id="amount" type="number" value="1000" oninput="updateConverter()" class="w-full text-5xl text-center bg-transparent outline-none">
-                    <div id="result" class="text-center text-5xl font-semibold text-emerald-400 mt-10"></div>
+                    <input id="amount" type="number" value="1000" oninput="updateConverter()" class="w-full bg-transparent text-5xl text-center outline-none">
+                    <div id="result" class="text-center text-5xl font-semibold text-emerald-400 mt-12"></div>
                 </div>
             </div>`;
         document.getElementById('content').innerHTML = html;
@@ -224,23 +257,21 @@
         document.getElementById('result').innerHTML = `${result.toFixed(2)} ${symbols[to]}`;
     }
 
-    function swap() {
+    function swapCurr() {
         const f = document.getElementById('from');
         const t = document.getElementById('to');
-        const temp = f.value;
-        f.value = t.value;
-        t.value = temp;
+        const temp = f.value; f.value = t.value; t.value = temp;
         updateConverter();
     }
 
     function showAddModal(type) {
-        const title = type === 'income' ? 'Пополнить' : 'Потратить';
+        const title = type === 'income' ? '💰 Пополнить' : '🛒 Потратить';
         const modalHTML = `
-        <div class="modal glass w-full rounded-t-3xl p-6">
+        <div class="glass w-full rounded-t-3xl p-6">
             <h3 class="text-2xl font-semibold mb-6">${title}</h3>
             <form onsubmit="addTransaction(event, '${type}')" class="space-y-5">
-                <input id="amt" type="number" step="0.01" placeholder="Сумма" required class="w-full py-5 px-6 bg-white/10 rounded-2xl text-4xl text-center outline-none">
-                <select id="cat" class="w-full py-5 px-6 bg-white/10 rounded-2xl">${categories.map(c => `<option>${c}</option>`).join('')}</select>
+                <input id="amt" type="number" step="0.01" placeholder="Сумма" required class="w-full py-6 px-6 bg-white/10 rounded-2xl text-4xl text-center outline-none">
+                <select id="cat" class="w-full py-6 px-6 bg-white/10 rounded-2xl">${categories.map(c => `<option>${c}</option>`).join('')}</select>
                 <button type="submit" class="w-full py-6 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-3xl font-semibold">Сохранить</button>
             </form>
         </div>`;
@@ -253,6 +284,7 @@
     function addTransaction(e, type) {
         e.preventDefault();
         const amount = parseFloat(document.getElementById('amt').value);
+        if (!amount) return;
         const category = document.getElementById('cat').value;
         transactions.unshift({id: Date.now(), date: new Date().toISOString().slice(0,10), type, amount, currency: baseCurrency, category});
         saveData();
@@ -280,8 +312,7 @@
         if (page === 'dashboard') renderDashboard();
         else if (page === 'transactions') renderTransactions();
         else if (page === 'converter') renderConverter();
-        else if (page === 'settings') document.getElementById('content').innerHTML = `<div class="p-8 text-center text-zinc-400">Настройки<br><br>Скоро</div>`;
-        else document.getElementById('content').innerHTML = `<div class="p-8 text-center text-zinc-400">Страница в разработке</div>`;
+        else document.getElementById('content').innerHTML = `<div class="p-12 text-center text-zinc-400">Страница в разработке</div>`;
     }
 
     async function initApp() {
