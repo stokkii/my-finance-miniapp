@@ -9,32 +9,35 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', system-ui, sans-serif; }
-        .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); }
-        .balance { font-size: 3rem; line-height: 1; letter-spacing: -2px; }
+        .glass { background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        .balance { font-size: 2.9rem; line-height: 1; letter-spacing: -1.8px; }
         .modal { animation: modalUp 0.35s cubic-bezier(0.32, 0.72, 0, 1); }
         @keyframes modalUp { from { transform: translateY(120%); } to { transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-zinc-950 text-white overflow-hidden">
+<body class="bg-zinc-950 text-white">
 
 <div class="max-w-md mx-auto min-h-screen bg-zinc-950 flex flex-col">
 
-    <!-- BALANCE HEADER -->
-    <div class="px-6 pt-12 pb-8 bg-gradient-to-b from-zinc-900 to-zinc-950">
-        <div class="text-center">
+    <!-- ФИКСИРОВАННЫЙ HEADER ТОЛЬКО НА ГЛАВНОЙ -->
+    <div id="main-header" class="px-6 pt-10 pb-6 bg-gradient-to-b from-zinc-900 to-zinc-950 hidden">
+        <div class="flex items-center justify-between">
+            <div id="user-header" class="flex items-center gap-3"></div>
+        </div>
+
+        <div class="text-center mt-8">
             <div id="balance-display" class="balance font-bold text-white"></div>
             <div id="change-display" class="mt-3 text-xl font-medium flex items-center justify-center gap-2"></div>
         </div>
 
-        <!-- Action buttons -->
         <div class="grid grid-cols-3 gap-3 mt-10">
-            <button onclick="showAddModal('income')" class="bg-gradient-to-r from-emerald-500 to-cyan-500 py-4 rounded-3xl font-semibold shadow-lg active:scale-95 transition">💰 Пополнить</button>
-            <button onclick="showAddModal('expense')" class="bg-gradient-to-r from-red-500 to-rose-500 py-4 rounded-3xl font-semibold shadow-lg active:scale-95 transition">🛒 Потратить</button>
-            <button onclick="switchPage('converter')" class="bg-gradient-to-r from-violet-500 to-purple-500 py-4 rounded-3xl font-semibold shadow-lg active:scale-95 transition">🔄 Конвертер</button>
+            <button onclick="showAddModal('income')" class="bg-gradient-to-r from-emerald-500 to-teal-500 py-4 rounded-3xl font-semibold text-base shadow-lg active:scale-95 transition">💰 Пополнить</button>
+            <button onclick="showAddModal('expense')" class="bg-gradient-to-r from-red-500 to-rose-500 py-4 rounded-3xl font-semibold text-base shadow-lg active:scale-95 transition">🛒 Потратить</button>
+            <button onclick="switchPage('converter')" class="bg-gradient-to-r from-violet-500 to-purple-500 py-4 rounded-3xl font-semibold text-base shadow-lg active:scale-95 transition">🔄 Конвертер</button>
         </div>
     </div>
 
-    <div id="content" class="flex-1 px-5 pt-2 pb-24 overflow-y-auto"></div>
+    <div id="content" class="flex-1 px-5 pt-4 pb-24 overflow-y-auto"></div>
 
     <!-- Bottom nav -->
     <div class="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-md w-full bg-zinc-900 border-t border-zinc-700 flex justify-around py-3 text-xs z-50">
@@ -118,7 +121,7 @@
             balance += tx.type === 'income' ? baseAmt : -baseAmt;
             dateMap[tx.date] = balance;
         });
-        Object.keys(dateMap).sort().forEach(d => history.push({date: d, balance: dateMap[d]}));
+        Object.keys(dateMap).sort().forEach(d => history.push({date:d, balance:dateMap[d]}));
         return history;
     }
 
@@ -128,6 +131,23 @@
         const changePercent = total > 0 ? ((change / total) * 100).toFixed(1) : 0;
         const history = getBalanceHistory();
 
+        // Аватарка + username
+        const tg = window.Telegram?.WebApp || {};
+        const user = tg.initDataUnsafe?.user || {};
+        const avatarHTML = user.photo_url 
+            ? `<img src="${user.photo_url}" class="w-10 h-10 rounded-2xl object-cover">` 
+            : `<div class="w-10 h-10 bg-gradient-to-br from-violet-400 to-cyan-400 rounded-2xl flex items-center justify-center text-2xl">👤</div>`;
+
+        document.getElementById('user-header').innerHTML = `
+            ${avatarHTML}
+            <div>
+                <div class="font-semibold">${user.first_name || 'Пользователь'}</div>
+                <div class="text-xs text-zinc-400">@${user.username || 'user'}</div>
+            </div>
+        `;
+
+        document.getElementById('main-header').classList.remove('hidden');
+
         let html = `
             <div class="space-y-8">
                 <div class="glass rounded-3xl p-6">
@@ -135,8 +155,8 @@
                     <canvas id="balance-chart" height="180"></canvas>
                 </div>
 
-                <div class="px-1">
-                    <div class="flex justify-between mb-4">
+                <div>
+                    <div class="flex justify-between mb-4 px-1">
                         <h2 class="font-semibold text-lg">Последние операции</h2>
                         <span onclick="switchPage('transactions')" class="text-violet-400 cursor-pointer">Все →</span>
                     </div>
@@ -147,14 +167,12 @@
 
         document.getElementById('content').innerHTML = html;
 
-        // Balance
         document.getElementById('balance-display').innerHTML = `${total.toFixed(0)} <span class="text-3xl">${symbols[baseCurrency]}</span>`;
         const chEl = document.getElementById('change-display');
         chEl.innerHTML = `${change >= 0 ? '↑' : '↓'} ${Math.abs(change).toFixed(0)} ${symbols[baseCurrency]} <span class="text-sm">(${change >= 0 ? '+' : ''}${changePercent}%)</span>`;
         chEl.className = change >= 0 ? "mt-3 text-emerald-400 text-xl font-medium flex items-center justify-center gap-2" : "mt-3 text-red-400 text-xl font-medium flex items-center justify-center gap-2";
 
-        // Recent
-        const recent = [...transactions].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,5);
+        const recent = [...transactions].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
         let str = '';
         recent.forEach(tx => {
             const baseAmt = getAmountInBase(tx.amount, tx.currency);
@@ -174,17 +192,31 @@
         });
         document.getElementById('recent-list').innerHTML = str || '<p class="text-center text-zinc-400 py-10">Нет операций</p>';
 
-        // Chart
+        // Красивый крипто-график
         if (chartInstance) chartInstance.destroy();
         const ctx = document.getElementById('balance-chart');
         if (history.length > 1) {
             chartInstance = new Chart(ctx, {
                 type: 'line',
-                data: { labels: history.map(h => h.date), datasets: [{ data: history.map(h => h.balance), borderColor: '#a5b4fc', borderWidth: 4, tension: 0.4, pointRadius: 0, fill: true, backgroundColor: 'rgba(165, 180, 252, 0.15)' }] },
-                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#27272a' } }, x: { grid: { color: '#27272a' } } } }
+                data: {
+                    labels: history.map(h => h.date),
+                    datasets: [{
+                        data: history.map(h => h.balance),
+                        borderColor: '#a5b4fc',
+                        borderWidth: 5,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        fill: true,
+                        backgroundColor: 'rgba(165, 180, 252, 0.15)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } }, x: { grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } } }
+                }
             });
         }
-        updateNavActive();
     }
 
     function renderTransactions() {
@@ -203,49 +235,26 @@
                 </div>
                 <div class="text-right">
                     <div class="${tx.type==='income'?'text-emerald-400':'text-red-400'} font-semibold">${tx.type==='income'?'+' : '-'}${base.toFixed(0)} ${symbols[baseCurrency]}</div>
+                    <button onclick="deleteTransaction(${tx.id});" class="text-red-400 text-xs mt-3">Удалить</button>
                 </div>
             </div>`;
         });
         container.innerHTML = str || '<p class="text-zinc-400 text-center py-12">Пока пусто</p>';
-        updateNavActive();
     }
 
-    function renderCategories() {
-        let html = `
-            <div class="px-2">
-                <div class="flex justify-between mb-6">
-                    <h2 class="text-2xl font-semibold">Категории</h2>
-                    <button onclick="addNewCategory()" class="bg-violet-600 px-6 py-3 rounded-3xl text-sm font-medium">+ Добавить</button>
-                </div>
-                <div id="cat-grid" class="grid grid-cols-2 gap-3"></div>
-            </div>`;
+    function renderCategories() { /* оставлено как было */ 
+        let html = `<div class="px-2"><div class="flex justify-between mb-6"><h2 class="text-2xl font-semibold">Категории</h2><button onclick="addNewCategory()" class="bg-violet-600 px-6 py-3 rounded-3xl text-sm">+ Добавить</button></div><div id="cat-grid" class="grid grid-cols-2 gap-3"></div></div>`;
         document.getElementById('content').innerHTML = html;
         const grid = document.getElementById('cat-grid');
         let str = '';
-        categories.forEach(cat => {
-            str += `<div class="glass rounded-3xl px-6 py-5 flex justify-between items-center"><span>${cat}</span><button onclick="deleteCategory('${cat}')" class="text-red-400">✕</button></div>`;
-        });
+        categories.forEach(cat => str += `<div class="glass rounded-3xl px-6 py-5 flex justify-between"><span>${cat}</span><button onclick="deleteCategory('${cat}')" class="text-red-400">✕</button></div>`);
         grid.innerHTML = str;
-        updateNavActive();
     }
 
     function renderConverter() {
-        let html = `
-            <div class="px-2">
-                <h2 class="text-2xl font-semibold mb-6">Конвертер</h2>
-                <div class="glass rounded-3xl p-6">
-                    <div class="flex items-center gap-4 mb-8">
-                        <select id="from-curr" onchange="updateConverter()" class="flex-1 bg-white/10 py-4 px-5 rounded-2xl text-lg">${currencies.map(c => `<option value="${c}">${c} ${symbols[c]}</option>`).join('')}</select>
-                        <button onclick="swapCurrencies()" class="text-4xl text-violet-400">⇄</button>
-                        <select id="to-curr" onchange="updateConverter()" class="flex-1 bg-white/10 py-4 px-5 rounded-2xl text-lg">${currencies.map(c => `<option value="${c}">${c} ${symbols[c]}</option>`).join('')}</select>
-                    </div>
-                    <input id="conv-amount" type="number" value="100" oninput="updateConverter()" class="w-full bg-transparent text-4xl text-center outline-none font-medium">
-                    <div id="conv-result" class="mt-10 text-center text-4xl font-semibold text-emerald-400"></div>
-                </div>
-            </div>`;
+        let html = `<div class="px-2"><h2 class="text-2xl font-semibold mb-6">Конвертер</h2><div class="glass rounded-3xl p-6"><div class="flex items-center gap-4 mb-8"><select id="from-curr" onchange="updateConverter()" class="flex-1 bg-white/10 py-4 px-5 rounded-2xl text-lg">${currencies.map(c => `<option value="${c}">${c} ${symbols[c]}</option>`).join('')}</select><button onclick="swapCurrencies()" class="text-4xl text-violet-400">⇄</button><select id="to-curr" onchange="updateConverter()" class="flex-1 bg-white/10 py-4 px-5 rounded-2xl text-lg">${currencies.map(c => `<option value="${c}">${c} ${symbols[c]}</option>`).join('')}</select></div><input id="conv-amount" type="number" value="100" oninput="updateConverter()" class="w-full bg-transparent text-4xl text-center outline-none font-medium"><div id="conv-result" class="mt-10 text-center text-4xl font-semibold text-emerald-400"></div></div></div>`;
         document.getElementById('content').innerHTML = html;
         setTimeout(updateConverter, 100);
-        updateNavActive();
     }
 
     function updateConverter() {
@@ -253,7 +262,7 @@
         const to = document.getElementById('to-curr').value;
         const amt = parseFloat(document.getElementById('conv-amount').value) || 0;
         if (!rates[from] || !rates[to]) return;
-        const result = (amt / rates[from]) * rates[to];
+        const result = amt * (rates[to] / rates[from]);
         document.getElementById('conv-result').innerHTML = `${result.toFixed(2)} ${symbols[to]}`;
     }
 
@@ -265,58 +274,31 @@
     }
 
     function renderSettings() {
-        let html = `
-            <div class="px-2">
-                <h2 class="text-2xl font-semibold mb-6">Настройки</h2>
-                <div class="glass rounded-3xl p-6">
-                    <p class="text-zinc-400 mb-3 text-sm">Базовая валюта</p>
-                    <select id="base-select" onchange="changeBaseCurrency(this.value)" class="w-full py-5 px-6 bg-white/10 rounded-2xl text-xl">${currencies.map(c => `<option value="${c}" ${c===baseCurrency?'selected':''}>${c} ${symbols[c]}</option>`).join('')}</select>
-                </div>
-            </div>`;
+        let html = `<div class="px-2"><h2 class="text-2xl font-semibold mb-6">Настройки</h2><div class="glass rounded-3xl p-6"><p class="text-zinc-400 mb-3 text-sm">Базовая валюта</p><select id="base-select" onchange="changeBaseCurrency(this.value)" class="w-full py-5 px-6 bg-white/10 rounded-2xl text-xl">${currencies.map(c => `<option value="${c}" ${c===baseCurrency?'selected':''}>${c} ${symbols[c]}</option>`).join('')}</select></div></div>`;
         document.getElementById('content').innerHTML = html;
-        updateNavActive();
     }
 
     function changeBaseCurrency(val) {
         baseCurrency = val;
         rates = {};
-        loadRates().then(() => {
-            saveData();
-            renderDashboard();
-        });
+        loadRates().then(() => { saveData(); renderDashboard(); });
     }
 
     function showAddModal(type) {
         const title = type === 'income' ? '💰 Пополнить' : '🛒 Потратить';
-        const modalHTML = `
-        <div class="modal glass w-full rounded-t-3xl p-6">
-            <h3 class="text-2xl font-semibold mb-6">${title}</h3>
-            <form onsubmit="addTransaction(event, '${type}')" class="space-y-6">
-                <input id="add-amount" type="number" step="0.01" placeholder="Сумма" required class="w-full py-6 px-6 bg-white/10 rounded-2xl text-4xl text-center outline-none">
-                <select id="add-category" class="w-full py-6 px-6 bg-white/10 rounded-2xl text-lg">${categories.map(c => `<option>${c}</option>`).join('')}</select>
-                <input id="add-desc" type="text" placeholder="Описание" class="w-full py-6 px-6 bg-white/10 rounded-2xl text-lg">
-                <button type="submit" class="w-full py-6 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-3xl text-xl font-semibold">Сохранить</button>
-            </form>
-        </div>`;
+        const modalHTML = `<div class="modal glass w-full rounded-t-3xl p-6"><h3 class="text-2xl font-semibold mb-6">${title}</h3><form onsubmit="addTransaction(event, '${type}')" class="space-y-6"><input id="add-amount" type="number" step="0.01" placeholder="Сумма" required class="w-full py-6 px-6 bg-white/10 rounded-2xl text-4xl text-center outline-none"><select id="add-category" class="w-full py-6 px-6 bg-white/10 rounded-2xl text-lg">${categories.map(c => `<option>${c}</option>`).join('')}</select><input id="add-desc" type="text" placeholder="Описание" class="w-full py-6 px-6 bg-white/10 rounded-2xl text-lg"><button type="submit" class="w-full py-6 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-3xl text-xl font-semibold">Сохранить</button></form></div>`;
         const modal = document.getElementById('add-modal');
         modal.querySelector('div').innerHTML = modalHTML;
         modal.classList.remove('hidden');
         modal.classList.add('flex');
     }
 
-    function hideAddModal() {
-        const modal = document.getElementById('add-modal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-
     function addTransaction(e, type) {
         e.preventDefault();
         const amount = parseFloat(document.getElementById('add-amount').value);
-        if (!amount) return;
         const category = document.getElementById('add-category').value;
         const desc = document.getElementById('add-desc').value || '';
-        transactions.unshift({id: Date.now(), date: new Date().toISOString().slice(0,10), type, amount, currency: baseCurrency, category, desc});
+        transactions.unshift({id:Date.now(), date:new Date().toISOString().slice(0,10), type, amount, currency:baseCurrency, category, desc});
         saveData();
         hideAddModal();
         renderDashboard();
@@ -330,25 +312,18 @@
         }
     }
 
-    function addNewCategory() {
-        const name = prompt('Название новой категории:');
-        if (name && name.trim()) {
-            categories.push(name.trim());
-            saveData();
-            renderCategories();
-        }
+    function hideAddModal() {
+        const modal = document.getElementById('add-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
     }
 
-    function deleteCategory(cat) {
-        if (confirm(`Удалить «${cat}»?`)) {
-            categories = categories.filter(c => c !== cat);
-            saveData();
-            renderCategories();
-        }
-    }
+    function addNewCategory() { const name = prompt('Название новой категории:'); if (name) { categories.push(name.trim()); saveData(); renderCategories(); } }
+    function deleteCategory(cat) { if (confirm(`Удалить «${cat}»?`)) { categories = categories.filter(c => c !== cat); saveData(); renderCategories(); } }
 
     function switchPage(page) {
         currentPage = page;
+        document.getElementById('main-header').classList.toggle('hidden', page !== 'dashboard');
         if (page === 'dashboard') renderDashboard();
         else if (page === 'transactions') renderTransactions();
         else if (page === 'categories') renderCategories();
@@ -356,12 +331,10 @@
         else if (page === 'settings') renderSettings();
     }
 
-    function updateNavActive() {}
-
     async function initApp() {
-        const tg = window.Telegram?.WebApp || {ready:()=>{}, expand:()=>{}};
+        const tg = window.Telegram?.WebApp || {};
         tg.ready();
-        tg.expand();   // Полноэкранный режим
+        tg.expand();
         loadData();
         await loadRates();
         renderDashboard();
