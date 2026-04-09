@@ -9,214 +9,351 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', system-ui, sans-serif; }
-        .balance { font-size: 3.2rem; line-height: 1; }
+        .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); }
+        .balance { font-size: 3.4rem; line-height: 1; letter-spacing: -2px; }
     </style>
 </head>
 <body class="bg-zinc-950 text-white">
-    <div class="max-w-md mx-auto min-h-screen bg-zinc-950 flex flex-col">
 
-        <!-- Header -->
-        <div class="px-6 pt-10 pb-6 bg-gradient-to-b from-zinc-900 to-transparent">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-cyan-400 rounded-2xl flex items-center justify-center text-2xl">👻</div>
-                    <div>
-                        <h1 class="text-2xl font-bold">Phantom Finance</h1>
-                        <p class="text-zinc-400 text-sm">Твой кошелёк</p>
-                    </div>
-                </div>
-                <div id="user-info" class="text-right"></div>
+<div class="max-w-md mx-auto min-h-screen bg-gradient-to-b from-zinc-900 to-zinc-950 flex flex-col">
+
+    <!-- HEADER как в Phantom -->
+    <div class="px-6 pt-8 pb-4">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-cyan-400 rounded-2xl flex items-center justify-center text-2xl">👻</div>
+                <div class="text-xl font-semibold">Wallet 1</div>
             </div>
+            <div id="user-info" class="text-sm text-zinc-400"></div>
         </div>
 
-        <div id="content" class="flex-1 px-5 pb-24 overflow-y-auto">
-
-            <!-- Главная страница будет здесь -->
-
+        <!-- Большой баланс -->
+        <div class="text-center mt-6">
+            <div id="balance" class="balance font-bold"></div>
+            <div id="change" class="text-emerald-400 text-xl font-medium flex justify-center items-center gap-2 mt-1"></div>
         </div>
 
-        <!-- Bottom Nav -->
-        <div class="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-md w-full bg-zinc-900 border-t border-zinc-700 flex justify-around py-3 text-xs">
-            <div onclick="switchPage('dashboard')" class="flex-1 flex flex-col items-center text-cyan-400">🏠<br><span>Главная</span></div>
-            <div onclick="switchPage('transactions')" class="flex-1 flex flex-col items-center text-zinc-400">📋<br><span>Операции</span></div>
-            <div onclick="switchPage('categories')" class="flex-1 flex flex-col items-center text-zinc-400">📂<br><span>Категории</span></div>
-            <div onclick="switchPage('converter')" class="flex-1 flex flex-col items-center text-zinc-400">🔄<br><span>Конвертер</span></div>
-            <div onclick="switchPage('settings')" class="flex-1 flex flex-col items-center text-zinc-400">⚙️<br><span>Настройки</span></div>
+        <!-- 3 кнопки как в Phantom -->
+        <div class="flex gap-3 mt-8 px-2">
+            <button onclick="showAddModal('income')" class="flex-1 bg-purple-600 hover:bg-purple-700 py-4 rounded-3xl font-semibold text-lg">Пополнить</button>
+            <button onclick="showAddModal('expense')" class="flex-1 bg-purple-600 hover:bg-purple-700 py-4 rounded-3xl font-semibold text-lg">Потратить</button>
+            <button onclick="switchPage('converter')" class="flex-1 bg-purple-600 hover:bg-purple-700 py-4 rounded-3xl font-semibold text-lg">Конвертер</button>
         </div>
     </div>
 
-    <!-- Add Modal -->
-    <div id="add-modal" class="hidden fixed inset-0 bg-black/80 z-[100] flex items-end"></div>
+    <div id="content" class="flex-1 px-5 pb-24 overflow-y-auto"></div>
 
-    <script>
-        let transactions = [];
-        let categories = ["Еда","Транспорт","Жильё","Зарплата","Фриланс","Развлечения","Здоровье","Одежда","Другое"];
-        let baseCurrency = 'RUB';
-        let rates = {};
-        const currencies = ['RUB','USD','EUR','GBP','CNY','JPY','TRY','CZK','UAH'];
-        const symbols = {RUB:'₽',USD:'$',EUR:'€',GBP:'£',CNY:'¥',JPY:'¥',TRY:'₺',CZK:'Kč',UAH:'₴'};
-        let currentPage = 'dashboard';
-        let chartInstance = null;
+    <!-- Bottom nav -->
+    <div class="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-md w-full bg-zinc-900/95 border-t border-white/10 flex justify-around py-3 text-xs z-50">
+        <div onclick="switchPage('dashboard')" class="flex-1 flex flex-col items-center text-emerald-400">🏠<br><span class="mt-1">Главная</span></div>
+        <div onclick="switchPage('transactions')" class="flex-1 flex flex-col items-center text-zinc-400">📋<br><span class="mt-1">Операции</span></div>
+        <div onclick="switchPage('categories')" class="flex-1 flex flex-col items-center text-zinc-400">📂<br><span class="mt-1">Категории</span></div>
+        <div onclick="switchPage('converter')" class="flex-1 flex flex-col items-center text-zinc-400">🔄<br><span class="mt-1">Конвертер</span></div>
+        <div onclick="switchPage('settings')" class="flex-1 flex flex-col items-center text-zinc-400">⚙️<br><span class="mt-1">Настройки</span></div>
+    </div>
+</div>
 
-        function loadData() {
-            const key = 'phantom_finance';
-            const saved = localStorage.getItem(key);
-            if (saved) {
-                const data = JSON.parse(saved);
-                transactions = data.transactions || [];
-                categories = data.categories || categories;
-                baseCurrency = data.baseCurrency || 'RUB';
-            } else {
-                saveData();
-            }
+<!-- Modal -->
+<div id="add-modal" class="hidden fixed inset-0 bg-black/80 z-[100] flex items-end"></div>
+
+<script>
+    let transactions = [];
+    let categories = ["Еда","Транспорт","Жильё","Зарплата","Фриланс","Развлечения","Здоровье","Одежда","Другое"];
+    let baseCurrency = 'RUB';
+    let rates = {};
+    const currencies = ['RUB','USD','EUR','GBP','CNY','JPY','TRY','CZK','UAH'];
+    const symbols = {RUB:'₽',USD:'$',EUR:'€',GBP:'£',CNY:'¥',JPY:'¥',TRY:'₺',CZK:'Kč',UAH:'₴'};
+    let currentPage = 'dashboard';
+    let chartInstance = null;
+
+    function loadData() {
+        const tg = window.Telegram?.WebApp || {};
+        const userId = tg.initDataUnsafe?.user?.id || 'demo';
+        const key = `phantom_finance_${userId}`;
+        const saved = localStorage.getItem(key);
+        if (saved) {
+            const data = JSON.parse(saved);
+            transactions = data.transactions || [];
+            categories = data.categories || categories;
+            baseCurrency = data.baseCurrency || 'RUB';
         }
+    }
 
-        function saveData() {
-            const key = 'phantom_finance';
-            localStorage.setItem(key, JSON.stringify({transactions, categories, baseCurrency}));
+    function saveData() {
+        const tg = window.Telegram?.WebApp || {};
+        const userId = tg.initDataUnsafe?.user?.id || 'demo';
+        const key = `phantom_finance_${userId}`;
+        localStorage.setItem(key, JSON.stringify({transactions, categories, baseCurrency}));
+    }
+
+    async function loadRates() {
+        if (Object.keys(rates).length) return;
+        try {
+            const res = await fetch(`https://api.frankfurter.app/latest?from=${baseCurrency}`);
+            const data = await res.json();
+            rates = data.rates || {};
+            rates[baseCurrency] = 1;
+        } catch(e) {
+            rates = {RUB:1, USD:0.0108, EUR:0.0099, CZK:0.24, UAH:0.42};
+            rates[baseCurrency] = 1;
         }
+    }
 
-        async function loadRates() {
-            if (Object.keys(rates).length) return;
-            try {
-                const res = await fetch(`https://api.frankfurter.app/latest?from=${baseCurrency}`);
-                const data = await res.json();
-                rates = data.rates || {};
-                rates[baseCurrency] = 1;
-            } catch(e) {
-                rates = {RUB:1, USD:0.0108, EUR:0.0099, CZK:0.24, UAH:0.42};
-                rates[baseCurrency] = 1;
-            }
-        }
+    function getAmountInBase(amount, curr) {
+        return curr === baseCurrency ? amount : amount / (rates[curr] || 1);
+    }
 
-        function getAmountInBase(amount, curr) {
-            return curr === baseCurrency ? amount : (amount / (rates[curr] || 1));
-        }
+    function calculateTotals() {
+        let total = 0, income = 0, expense = 0;
+        transactions.forEach(tx => {
+            const base = getAmountInBase(tx.amount, tx.currency);
+            if (tx.type === 'income') { income += base; total += base; }
+            else { expense += base; total -= base; }
+        });
+        return {total, income, expense};
+    }
 
-        function calculateTotals() {
-            let total = 0, income = 0, expense = 0;
-            transactions.forEach(tx => {
-                const base = getAmountInBase(tx.amount, tx.currency);
-                if (tx.type === 'income') { income += base; total += base; }
-                else { expense += base; total -= base; }
-            });
-            return {total, income, expense};
-        }
+    function renderDashboard() {
+        const {total, income, expense} = calculateTotals();
+        const change = income - expense;
+        const changePercent = total > 0 ? ((change / total) * 100).toFixed(2) : 0;
 
-        function renderDashboard() {
-            const {total, income, expense} = calculateTotals();
-            const change = income - expense;
-            const changePercent = total > 0 ? ((change / (total - change)) * 100).toFixed(1) : 0;
+        let html = `
+            <div class="space-y-8">
+                <!-- График -->
+                <div class="bg-zinc-900/70 rounded-3xl p-6">
+                    <h2 class="font-medium mb-4">Динамика баланса</h2>
+                    <canvas id="chart" height="180"></canvas>
+                </div>
 
-            let html = `
-                <div class="space-y-8">
-                    <!-- Balance -->
-                    <div class="text-center pt-4">
-                        <p class="text-zinc-400 text-lg">Твой баланс</p>
-                        <p class="balance font-bold text-white mt-2">${total.toFixed(0)} ${symbols[baseCurrency]}</p>
-                        <p class="mt-3 ${change >= 0 ? 'text-emerald-400' : 'text-red-400'} font-medium">
-                            ${change >= 0 ? '+' : ''}${change.toFixed(0)} ${symbols[baseCurrency]} 
-                            <span class="text-sm">(${change >= 0 ? '+' : ''}${changePercent}%)</span>
-                        </p>
+                <!-- Последние операции (как токены в Phantom) -->
+                <div class="px-1">
+                    <div class="flex justify-between mb-4">
+                        <h2 class="font-semibold">Последние операции</h2>
+                        <span onclick="switchPage('transactions')" class="text-purple-400 cursor-pointer">Все →</span>
                     </div>
+                    <div id="recent-list" class="space-y-3"></div>
+                </div>
+            </div>
+        `;
 
-                    <!-- Action Buttons -->
-                    <div class="flex gap-4 px-4">
-                        <button onclick="showAddModal('income')" class="flex-1 bg-emerald-500 hover:bg-emerald-600 py-5 rounded-3xl font-semibold text-xl shadow-lg">💰 Доход</button>
-                        <button onclick="showAddModal('expense')" class="flex-1 bg-red-500 hover:bg-red-600 py-5 rounded-3xl font-semibold text-xl shadow-lg">🛒 Расход</button>
-                    </div>
+        document.getElementById('content').innerHTML = html;
 
-                    <!-- Chart -->
-                    <div class="bg-zinc-900 rounded-3xl p-6 mx-2">
-                        <h2 class="font-semibold mb-4">Динамика за период</h2>
-                        <canvas id="main-chart" height="180"></canvas>
-                    </div>
+        // Баланс и изменение
+        document.getElementById('balance').innerHTML = `${total.toFixed(0)} <span class="text-4xl">${symbols[baseCurrency]}</span>`;
+        const changeEl = document.getElementById('change');
+        changeEl.innerHTML = `${change >= 0 ? '+' : ''}${change.toFixed(0)} ${symbols[baseCurrency]} <span class="text-sm">(${change >= 0 ? '+' : ''}${changePercent}%)</span>`;
+        changeEl.className = change >= 0 ? 'text-emerald-400 text-xl font-medium flex justify-center items-center gap-2 mt-1' : 'text-red-400 text-xl font-medium flex justify-center items-center gap-2 mt-1';
 
-                    <!-- Recent -->
-                    <div class="px-2">
-                        <div class="flex justify-between mb-4 px-2">
-                            <h2 class="font-semibold text-lg">Последние операции</h2>
-                            <span onclick="switchPage('transactions')" class="text-cyan-400 cursor-pointer">Все →</span>
-                        </div>
-                        <div id="recent" class="space-y-3"></div>
+        // Recent
+        const recent = [...transactions].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,5);
+        let str = '';
+        recent.forEach(tx => {
+            const baseAmt = getAmountInBase(tx.amount, tx.currency);
+            str += `
+            <div class="bg-zinc-900 rounded-2xl p-4 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <span class="text-4xl">${tx.type==='income'?'💰':'🛒'}</span>
+                    <div>
+                        <div class="font-medium">${tx.category}</div>
+                        <div class="text-xs text-zinc-400">${tx.date}</div>
                     </div>
                 </div>
-            `;
+                <div class="text-right">
+                    <div class="${tx.type==='income'?'text-emerald-400':'text-red-400'} font-semibold">${tx.type==='income'?'+' : '-'}${baseAmt.toFixed(0)} ${symbols[baseCurrency]}</div>
+                </div>
+            </div>`;
+        });
+        document.getElementById('recent-list').innerHTML = str || '<p class="text-zinc-400 text-center py-8">Пока нет операций</p>';
 
-            document.getElementById('content').innerHTML = html;
+        updateNavActive();
+    }
 
-            // Recent list
-            const recentHTML = document.getElementById('recent');
-            const recentTx = [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,5);
-            let str = '';
-            recentTx.forEach(tx => {
-                const baseAmt = getAmountInBase(tx.amount, tx.currency);
-                str += `
-                <div class="bg-zinc-900 rounded-2xl p-4 flex justify-between items-center">
-                    <div class="flex items-center gap-4">
-                        <span class="text-3xl">${tx.type==='income' ? '💰' : '🛒'}</span>
-                        <div>
-                            <div class="font-medium">${tx.category}</div>
-                            <div class="text-xs text-zinc-400">${tx.date}</div>
-                        </div>
+    function renderTransactions() {
+        let html = `<div class="px-4"><h2 class="text-2xl font-semibold mb-6">Все операции</h2><div id="tx-list"></div></div>`;
+        document.getElementById('content').innerHTML = html;
+        const container = document.getElementById('tx-list');
+        const sorted = [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
+        let str = '';
+        sorted.forEach(tx => {
+            const base = getAmountInBase(tx.amount, tx.currency);
+            str += `
+            <div class="bg-zinc-900 rounded-3xl p-5 flex justify-between mb-3">
+                <div>
+                    <div class="font-medium">${tx.category}</div>
+                    <div class="text-xs text-zinc-400">${tx.date}</div>
+                </div>
+                <div class="text-right">
+                    <div class="${tx.type==='income'?'text-emerald-400':'text-red-400'} font-semibold text-xl">${tx.type==='income'?'+' : '-'}${base.toFixed(0)} ${symbols[baseCurrency]}</div>
+                    <button onclick="deleteTransaction(${tx.id});" class="text-red-400 text-xs mt-2">Удалить</button>
+                </div>
+            </div>`;
+        });
+        container.innerHTML = str || '<p class="text-zinc-400 text-center py-12">Пока пусто</p>';
+        updateNavActive();
+    }
+
+    function renderCategories() {
+        let html = `
+            <div class="px-4">
+                <div class="flex justify-between mb-6">
+                    <h2 class="text-2xl font-semibold">Категории</h2>
+                    <button onclick="addNewCategory()" class="bg-purple-600 px-6 py-3 rounded-3xl">+ Добавить</button>
+                </div>
+                <div id="cat-list" class="space-y-3"></div>
+            </div>`;
+        document.getElementById('content').innerHTML = html;
+        const list = document.getElementById('cat-list');
+        let str = '';
+        categories.forEach(cat => {
+            str += `<div class="bg-zinc-900 rounded-3xl px-6 py-5 flex justify-between"><span>${cat}</span><button onclick="deleteCategory('${cat}')" class="text-red-400">✕</button></div>`;
+        });
+        list.innerHTML = str;
+        updateNavActive();
+    }
+
+    function renderConverter() {
+        let html = `
+            <div class="px-4 space-y-8">
+                <h2 class="text-2xl font-semibold">Конвертер валют</h2>
+                <div class="glass rounded-3xl p-8">
+                    <div class="flex gap-4 mb-8">
+                        <select id="from" onchange="updateConverter()" class="flex-1 bg-white/10 py-5 px-6 rounded-3xl text-xl">${currencies.map(c=>`<option value="${c}">${c} ${symbols[c]}</option>`).join('')}</select>
+                        <button onclick="swapCurr()" class="text-4xl">⇄</button>
+                        <select id="to" onchange="updateConverter()" class="flex-1 bg-white/10 py-5 px-6 rounded-3xl text-xl">${currencies.map(c=>`<option value="${c}">${c} ${symbols[c]}</option>`).join('')}</select>
                     </div>
-                    <div class="text-right">
-                        <div class="${tx.type==='income' ? 'text-emerald-400' : 'text-red-400'} font-semibold">
-                            ${tx.type==='income' ? '+' : '-'}${baseAmt.toFixed(0)} ${symbols[baseCurrency]}
-                        </div>
-                    </div>
-                </div>`;
-            });
-            recentHTML.innerHTML = str || '<p class="text-center text-zinc-400 py-8">Пока нет операций</p>';
+                    <input id="conv-amt" type="number" value="100" oninput="updateConverter()" class="w-full text-6xl bg-transparent text-center outline-none">
+                    <div id="conv-result" class="text-5xl text-center font-semibold text-emerald-400 mt-12"></div>
+                </div>
+            </div>`;
+        document.getElementById('content').innerHTML = html;
+        setTimeout(updateConverter, 50);
+        updateNavActive();
+    }
 
-            updateNavActive();
-        }
+    function updateConverter() {
+        const from = document.getElementById('from').value;
+        const to = document.getElementById('to').value;
+        const amt = parseFloat(document.getElementById('conv-amt').value) || 0;
+        if (!rates[from] || !rates[to]) return;
+        const result = (amt / rates[from]) * rates[to];
+        document.getElementById('conv-result').innerHTML = `${result.toFixed(2)} ${symbols[to]}`;
+    }
 
-        function switchPage(page) {
-            currentPage = page;
-            if (page === 'dashboard') renderDashboard();
-            else if (page === 'transactions') renderTransactions();
-            else if (page === 'categories') renderCategories();
-            else if (page === 'converter') renderConverter();
-            else if (page === 'settings') renderSettings();
-        }
+    function swapCurr() {
+        const f = document.getElementById('from');
+        const t = document.getElementById('to');
+        const temp = f.value; f.value = t.value; t.value = temp;
+        updateConverter();
+    }
 
-        function updateNavActive() {
-            // Простая подсветка активной вкладки (можно улучшить позже)
-            console.log('Переключились на', currentPage);
-        }
+    function renderSettings() {
+        let html = `
+            <div class="px-4">
+                <h2 class="text-2xl font-semibold mb-6">Настройки</h2>
+                <div class="glass rounded-3xl p-8">
+                    <p class="text-zinc-400 text-sm mb-3">Базовая валюта</p>
+                    <select id="base-curr" onchange="changeBase(this.value)" class="w-full py-6 px-6 rounded-3xl bg-white/10 text-2xl">${currencies.map(c=>`<option value="${c}" ${c===baseCurrency?'selected':''}>${c} ${symbols[c]}</option>`).join('')}</select>
+                </div>
+                <button onclick="clearAllData()" class="w-full mt-8 py-6 bg-red-600 rounded-3xl text-xl">Очистить все данные</button>
+            </div>`;
+        document.getElementById('content').innerHTML = html;
+        updateNavActive();
+    }
 
-        // Простые заглушки для остальных страниц (чтобы не падало)
-        function renderTransactions() { document.getElementById('content').innerHTML = `<div class="p-8 text-center text-zinc-400">Страница всех операций<br><br>Скоро будет доработана</div>`; }
-        function renderCategories() { document.getElementById('content').innerHTML = `<div class="p-8 text-center text-zinc-400">Категории<br><br>Скоро</div>`; }
-        function renderConverter() { document.getElementById('content').innerHTML = `<div class="p-8 text-center text-zinc-400">Конвертер валют<br><br>Скоро</div>`; }
-        function renderSettings() { document.getElementById('content').innerHTML = `<div class="p-8 text-center text-zinc-400">Настройки<br><br>Скоро</div>`; }
+    function changeBase(val) {
+        baseCurrency = val;
+        rates = {};
+        loadRates().then(() => { saveData(); renderDashboard(); });
+    }
 
-        function showAddModal(type) {
-            // Здесь можно вставить модалку позже, пока используем alert для теста
-            const amount = prompt(type === 'income' ? 'Сумма дохода:' : 'Сумма расхода:');
-            if (!amount) return;
-            const category = prompt('Категория:') || 'Другое';
-            transactions.unshift({
-                id: Date.now(),
-                date: new Date().toISOString().slice(0,10),
-                type,
-                amount: parseFloat(amount),
-                currency: baseCurrency,
-                category
-            });
+    function showAddModal(type) {
+        const modalHTML = `
+        <div class="glass w-full rounded-t-3xl p-8">
+            <h3 class="text-3xl font-semibold mb-6">${type==='income'?'💰 Пополнить':'🛒 Потратить'}</h3>
+            <form onsubmit="addTransaction(event,'${type}')" class="space-y-6">
+                <input id="amt" type="number" step="0.01" placeholder="Сумма" class="w-full py-6 px-6 bg-white/10 rounded-3xl text-5xl text-center outline-none" required>
+                <select id="cat" class="w-full py-6 px-6 bg-white/10 rounded-3xl text-2xl">${categories.map(c=>`<option>${c}</option>`).join('')}</select>
+                <input id="desc" type="text" placeholder="Описание" class="w-full py-6 px-6 bg-white/10 rounded-3xl text-xl">
+                <button type="submit" class="w-full py-7 bg-emerald-500 rounded-3xl text-2xl font-semibold">Сохранить</button>
+            </form>
+        </div>`;
+        const modal = document.getElementById('add-modal');
+        modal.innerHTML = modalHTML;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function hideAddModal() {
+        const modal = document.getElementById('add-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function addTransaction(e, type) {
+        e.preventDefault();
+        const amount = parseFloat(document.getElementById('amt').value);
+        const category = document.getElementById('cat').value;
+        const desc = document.getElementById('desc').value || '';
+        transactions.unshift({id:Date.now(), date:new Date().toISOString().slice(0,10), type, amount, currency:baseCurrency, category, desc});
+        saveData();
+        hideAddModal();
+        renderDashboard();
+    }
+
+    function deleteTransaction(id) {
+        if (confirm('Удалить?')) {
+            transactions = transactions.filter(t => t.id !== id);
             saveData();
-            renderDashboard();
+            renderTransactions();
         }
+    }
 
-        async function initApp() {
-            loadData();
-            await loadRates();
-            document.getElementById('user-info').innerHTML = `👋 ${baseCurrency}`;
-            renderDashboard();
+    function addNewCategory() {
+        const name = prompt('Новая категория:');
+        if (name) categories.push(name);
+        saveData();
+        renderCategories();
+    }
+
+    function deleteCategory(cat) {
+        if (confirm(`Удалить ${cat}?`)) {
+            categories = categories.filter(c => c !== cat);
+            saveData();
+            renderCategories();
         }
+    }
 
-        window.onload = initApp;
-    </script>
+    function clearAllData() {
+        if (confirm('Очистить всё?')) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    function switchPage(page) {
+        currentPage = page;
+        if (page === 'dashboard') renderDashboard();
+        else if (page === 'transactions') renderTransactions();
+        else if (page === 'categories') renderCategories();
+        else if (page === 'converter') renderConverter();
+        else if (page === 'settings') renderSettings();
+    }
+
+    function updateNavActive() {
+        // Можно улучшить позже
+    }
+
+    async function initApp() {
+        const tg = window.Telegram?.WebApp || {};
+        tg.ready(); tg.expand();
+        loadData();
+        await loadRates();
+        document.getElementById('user-info').innerHTML = `👋 ${baseCurrency}`;
+        renderDashboard();
+    }
+
+    window.onload = initApp;
+</script>
 </body>
 </html>
