@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>💰 Мои Финансы</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .modal { animation: modalPop 0.3s ease; }
+        @keyframes modalPop { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-950 text-white">
+    <div class="max-w-md mx-auto min-h-screen bg-gray-950 flex flex-col shadow-2xl" style="max-width: 480px;">
+
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="text-4xl">💰</div>
+                <div>
+                    <h1 class="text-2xl font-semibold tracking-tight">Мои Финансы</h1>
+                    <p class="text-emerald-100 text-sm -mt-1">Твой личный помощник</p>
+                </div>
+            </div>
+            <div id="user-info" class="text-right text-sm"></div>
+        </div>
+
+        <!-- Content -->
+        <div id="content" class="flex-1 px-5 pt-6 pb-24 overflow-y-auto"></div>
+
+        <!-- Bottom navigation -->
+        <div id="bottom-nav" class="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-md w-full bg-gray-900 border-t border-gray-700 flex justify-around py-3 text-xs z-50">
+            <div onclick="switchPage('dashboard')" class="flex-1 flex flex-col items-center text-emerald-400">
+                🏠<br><span class="mt-0.5">Главная</span>
+            </div>
+            <div onclick="switchPage('transactions')" class="flex-1 flex flex-col items-center text-gray-400">
+                📋<br><span class="mt-0.5">Операции</span>
+            </div>
+            <div onclick="switchPage('categories')" class="flex-1 flex flex-col items-center text-gray-400">
+                📂<br><span class="mt-0.5">Категории</span>
+            </div>
+            <div onclick="switchPage('converter')" class="flex-1 flex flex-col items-center text-gray-400">
+                🔄<br><span class="mt-0.5">Конвертер</span>
+            </div>
+            <div onclick="switchPage('settings')" class="flex-1 flex flex-col items-center text-gray-400">
+                ⚙️<br><span class="mt-0.5">Настройки</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add modal -->
+    <div id="add-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end"></div>
+
+    <script>
+        let transactions = [];
+        let categories = [];
+        let baseCurrency = 'RUB';
+        let rates = {};
+        const currencies = ['RUB', 'USD', 'EUR', 'GBP', 'CNY', 'JPY', 'TRY'];
+        const symbols = {RUB:'₽', USD:'$', EUR:'€', GBP:'£', CNY:'¥', JPY:'¥', TRY:'₺'};
+        let currentPage = 'dashboard';
+        let chartInstance = null;
+
+        function getDefaultData() {
+            return {
+                transactions: [
+                    {id:1, date:"2026-04-05", type:"expense", amount:850, currency:"RUB", category:"Еда", desc:"Ужин в ресторане"},
+                    {id:2, date:"2026-04-04", type:"income", amount:65000, currency:"RUB", category:"Зарплата", desc:"Апрель"},
+                    {id:3, date:"2026-04-03", type:"expense", amount:1200, currency:"RUB", category:"Транспорт", desc:"Такси"},
+                ],
+                categories: ["Еда","Транспорт","Жильё","Зарплата","Фриланс","Развлечения","Здоровье","Одежда","Другое"],
+                baseCurrency: "RUB"
+            };
+        }
+
+        function loadData() {
+            const tg = window.Telegram?.WebApp || {};
+            const userId = tg.initDataUnsafe?.user?.id || 'demo123';
+            const key = `finance_data_${userId}`;
+            const saved = localStorage.getItem(key);
+            if (saved) {
+                const data = JSON.parse(saved);
+                transactions = data.transactions || [];
+                categories = data.categories || getDefaultData().categories;
+                baseCurrency = data.baseCurrency || 'RUB';
+            } else {
+                const def = getDefaultData();
+                transactions = def.transactions;
+                categories = def.categories;
+                baseCurrency = def.baseCurrency;
+                saveData();
+            }
+        }
+
+        function saveData() {
+            const tg = window.Telegram?.WebApp || {};
+            const userId = tg.initDataUnsafe?.user?.id || 'demo123';
+            const key = `finance_data_${userId}`;
+            localStorage.setItem(key, JSON.stringify({transactions, categories, baseCurrency}));
+        }
+
+        async function loadRates() {
+            if (Object.keys(rates).length > 0) return;
+            try {
+                const res = await fetch(`https://api.frankfurter.app/latest?from=${baseCurrency}`);
+                const data = await res.json();
+                rates = data.rates || {};
+                rates[baseCurrency] = 1;
+            } catch(e) {
+                rates = {RUB:1, USD:0.0108, EUR:0.0099};
+            }
+        }
+
+        function getAmountInBase(amount, curr) {
+            if (!rates[curr]) return amount;
+            return curr === baseCurrency ? amount : amount / rates[curr];
+        }
+
+        function calculateTotals() {
+            let total = 0, income = 0, expense = 0;
+            const expenseByCat = {};
+            transactions.forEach(tx => {
+                const baseAmt = getAmountInBase(tx.amount, tx.currency);
+                if (tx.type === 'income') {
+                    income += baseAmt;
+                    total += baseAmt;
+                } else {
+                    expense += baseAmt;
+                    total -= baseAmt;
+                    expenseByCat[tx.category] = (expenseByCat[tx.category] || 0) + baseAmt;
+                }
+            });
+            return {total, income, expense, expenseByCat};
+        }
+
+        function renderDashboard() {
+            const {total, income, expense, expenseByCat} = calculateTotals();
+            let html = `
+                <div class="space-y-6">
+                    <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-8 text-center shadow-inner">
+                        <p class="text-emerald-100 text-lg">Твой баланс</p>
+                        <p class="text-6xl font-semibold mt-2">${total.toFixed(0)} ${symbols[baseCurrency]}</p>
+                        <div class="flex justify-between mt-8 text-sm">
+                            <div class="text-left"><span class="text-emerald-200">Доходы</span><br><span class="text-2xl text-white">+${income.toFixed(0)}</span></div>
+                            <div class="text-right"><span class="text-red-200">Расходы</span><br><span class="text-2xl text-white">-${expense.toFixed(0)}</span></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4 px-1">Расходы по категориям</h2>
+                        <canvas id="expense-chart" class="w-full h-72"></canvas>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="showAddModal('income')" class="bg-emerald-600 hover:bg-emerald-700 py-6 rounded-3xl text-xl font-medium flex items-center justify-center gap-3">
+                            💵 Добавить доход
+                        </button>
+                        <button onclick="showAddModal('expense')" class="bg-red-600 hover:bg-red-700 py-6 rounded-3xl text-xl font-medium flex items-center justify-center gap-3">
+                            🛒 Добавить расход
+                        </button>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between px-1 mb-4">
+                            <h2 class="text-xl font-semibold">Последние операции</h2>
+                            <button onclick="switchPage('transactions')" class="text-emerald-400">Все →</button>
+                        </div>
+                        <div id="recent-list" class="space-y-4"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('content').innerHTML = html;
+
+            // recent
+            const recent = [...transactions].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,4);
+            let recHTML = '';
+            recent.forEach(tx => {
+                const baseAmt = getAmountInBase(tx.amount, tx.currency);
+                const sign = tx.type === 'income' ? '+' : '-';
+                const color = tx.type === 'income' ? 'emerald' : 'red';
+                recHTML += `
+                <div class="bg-gray-900 rounded-3xl p-5 flex justify-between items-center">
+                    <div class="flex gap-4">
+                        <div class="text-3xl">${tx.type==='income'?'💵':'🛒'}</div>
+                        <div>
+                            <div class="font-semibold">${tx.category}</div>
+                            <div class="text-xs text-gray-400">${tx.date} • ${tx.desc||''}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-${color}-400 font-bold">${sign}${baseAmt.toFixed(0)} ${symbols[baseCurrency]}</div>
+                        <div class="text-xs text-gray-400">${tx.amount} ${symbols[tx.currency]}</div>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('recent-list').innerHTML = recHTML || '<p class="text-gray-400 text-center py-8">Пока нет операций</p>';
+
+            // chart
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('expense-chart');
+            const labels = Object.keys(expenseByCat);
+            const values = Object.values(expenseByCat);
+            if (labels.length) {
+                chartInstance = new Chart(ctx, {
+                    type: 'pie',
+                    data: { labels, datasets: [{data: values, backgroundColor: ['#10b981','#14b8a6','#06b67f','#0ea5e9','#8b5cf6','#ec4899','#f59e0b'], borderWidth: 0}] },
+                    options: { responsive: true, plugins: { legend: { position: 'bottom', labels: {color:'#e5e7eb', padding: 20, boxWidth: 14} } } }
+                });
+            }
+            updateNavActive();
+        }
+
+        function renderTransactions() {
+            let html = `<div class="px-1"><h2 class="text-2xl font-semibold mb-6">Все операции</h2><div id="tx-list" class="space-y-4"></div></div>`;
+            document.getElementById('content').innerHTML = html;
+            const container = document.getElementById('tx-list');
+            const sorted = [...transactions].sort((a,b)=> new Date(b.date) - new Date(a.date));
+            let str = '';
+            sorted.forEach(tx => {
+                const baseAmt = getAmountInBase(tx.amount, tx.currency);
+                const sign = tx.type === 'income' ? '+' : '-';
+                str += `
+                <div class="bg-gray-900 rounded-3xl p-6 flex justify-between">
+                    <div>
+                        <div class="font-medium">${tx.category}</div>
+                        <div class="text-xs text-gray-400">${tx.date} • ${tx.desc||''}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="${tx.type==='income'?'text-emerald-400':'text-red-400'} font-bold">${sign}${baseAmt.toFixed(0)} ${symbols[baseCurrency]}</div>
+                        <button onclick="deleteTransaction(${tx.id});" class="text-[10px] text-red-400 mt-2">Удалить</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = str || '<p class="py-12 text-center text-gray-400">Пока пусто</p>';
+            updateNavActive();
+        }
+
+        function renderCategories() {
+            let html = `
+            <div class="px-1">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold">Категории</h2>
+                    <button onclick="addNewCategory()" class="bg-emerald-600 px-6 py-3 rounded-2xl text-sm font-medium">+ Новая</button>
+                </div>
+                <div id="cat-grid" class="grid grid-cols-2 gap-4"></div>
+            </div>`;
+            document.getElementById('content').innerHTML = html;
+            const grid = document.getElementById('cat-grid');
+            let str = '';
+            categories.forEach(cat => {
+                str += `<div class="bg-gray-900 rounded-3xl px-6 py-5 flex justify-between items-center"><span>${cat}</span><button onclick="deleteCategory('${cat}')" class="text-red-400 text-xl">✕</button></div>`;
+            });
+            grid.innerHTML = str;
+            updateNavActive();
+        }
+
+        function renderConverter() {
+            let html = `
+            <div class="px-1 space-y-8">
+                <h2 class="text-2xl font-semibold">Конвертер валют</h2>
+                <div class="bg-gray-900 rounded-3xl p-8">
+                    <div class="flex gap-6 mb-8">
+                        <div class="flex-1">
+                            <p class="text-xs text-gray-400 mb-2">Из</p>
+                            <select id="from-curr" onchange="updateConverter()" class="w-full bg-gray-800 text-2xl py-4 px-6 rounded-2xl outline-none">${currencies.map(c=>`<option value="${c}">${c} ${symbols[c]||''}</option>`).join('')}</select>
+                        </div>
+                        <button onclick="swapCurrencies()" class="text-4xl self-end mb-3">⇄</button>
+                        <div class="flex-1">
+                            <p class="text-xs text-gray-400 mb-2">В</p>
+                            <select id="to-curr" onchange="updateConverter()" class="w-full bg-gray-800 text-2xl py-4 px-6 rounded-2xl outline-none">${currencies.map(c=>`<option value="${c}">${c} ${symbols[c]||''}</option>`).join('')}</select>
+                        </div>
+                    </div>
+                    <input id="conv-amount" type="number" value="100" oninput="updateConverter()" class="w-full bg-transparent text-6xl font-semibold outline-none text-center">
+                    <div id="conv-result" class="text-center text-5xl font-semibold text-emerald-400 mt-8"></div>
+                    <div id="rate-info" class="text-center text-xs text-gray-400 mt-6"></div>
+                </div>
+            </div>`;
+            document.getElementById('content').innerHTML = html;
+            setTimeout(updateConverter, 50);
+            updateNavActive();
+        }
+
+        function updateConverter() {
+            const from = document.getElementById('from-curr').value;
+            const to = document.getElementById('to-curr').value;
+            const amt = parseFloat(document.getElementById('conv-amount').value) || 0;
+            if (!rates[from] || !rates[to]) return;
+            const baseAmt = amt / rates[from];
+            const result = baseAmt * rates[to];
+            document.getElementById('conv-result').innerHTML = `${result.toFixed(2)} <span class="text-2xl">${symbols[to]||to}</span>`;
+            document.getElementById('rate-info').innerHTML = `1 ${from} = ${ (rates[to]/rates[from]).toFixed(4) } ${to}`;
+        }
+
+        function swapCurrencies() {
+            const f = document.getElementById('from-curr');
+            const t = document.getElementById('to-curr');
+            const temp = f.value; f.value = t.value; t.value = temp;
+            updateConverter();
+        }
+
+        function renderSettings() {
+            let html = `
+            <div class="px-1 space-y-8">
+                <h2 class="text-2xl font-semibold">Настройки</h2>
+                <div class="bg-gray-900 rounded-3xl p-8">
+                    <p class="text-sm text-gray-400 mb-3">Базовая валюта</p>
+                    <select id="base-select" onchange="changeBaseCurrency(this.value)" class="w-full bg-gray-800 rounded-2xl py-5 px-6 text-xl">
+                        ${currencies.map(c => `<option value="${c}" ${c===baseCurrency?'selected':''}>${c} ${symbols[c]||''}</option>`).join('')}
+                    </select>
+                </div>
+                <button onclick="clearAllData()" class="w-full py-6 bg-red-600 rounded-3xl text-xl">Очистить все данные</button>
+                <p class="text-center text-xs text-gray-400">Данные хранятся только на твоём устройстве</p>
+            </div>`;
+            document.getElementById('content').innerHTML = html;
+            updateNavActive();
+        }
+
+        function changeBaseCurrency(newBase) {
+            baseCurrency = newBase;
+            rates = {};
+            loadRates().then(() => {
+                saveData();
+                switchPage(currentPage);
+            });
+        }
+
+        function showAddModal(type) {
+            const modalHTML = `
+            <div class="bg-gray-900 w-full rounded-t-3xl p-8 max-h-[90vh] overflow-auto">
+                <div class="flex justify-between mb-8">
+                    <h3 class="text-3xl font-semibold">${type==='income' ? '💵 Новый доход' : '🛒 Новый расход'}</h3>
+                    <button onclick="hideAddModal()" class="text-4xl leading-none">×</button>
+                </div>
+                <form onsubmit="addTransaction(event, '${type}')" class="space-y-8">
+                    <input id="add-amount" type="number" step="0.01" placeholder="Сумма" required class="w-full bg-gray-800 text-5xl py-6 px-6 rounded-3xl outline-none text-center">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <p class="text-xs text-gray-400 mb-2">Валюта</p>
+                            <select id="add-currency" class="w-full bg-gray-800 py-5 px-6 rounded-3xl">${currencies.map(c=>`<option value="${c}">${c} ${symbols[c]||''}</option>`).join('')}</select>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 mb-2">Категория</p>
+                            <select id="add-category" class="w-full bg-gray-800 py-5 px-6 rounded-3xl">${categories.map(cat=>`<option>${cat}</option>`).join('')}</select>
+                        </div>
+                    </div>
+                    <input id="add-date" type="date" value="${new Date().toISOString().slice(0,10)}" class="w-full bg-gray-800 py-5 px-6 rounded-3xl outline-none">
+                    <input id="add-desc" type="text" placeholder="Описание (необязательно)" class="w-full bg-gray-800 py-5 px-6 rounded-3xl outline-none">
+                    <button type="submit" class="w-full py-7 bg-emerald-600 rounded-3xl text-2xl font-medium">Сохранить</button>
+                </form>
+            </div>`;
+            const modal = document.getElementById('add-modal');
+            modal.innerHTML = modalHTML;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideAddModal() {
+            const modal = document.getElementById('add-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function addTransaction(e, type) {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('add-amount').value);
+            const currency = document.getElementById('add-currency').value;
+            const category = document.getElementById('add-category').value;
+            const date = document.getElementById('add-date').value;
+            const desc = document.getElementById('add-desc').value || '';
+
+            transactions.unshift({
+                id: Date.now(),
+                date,
+                type,
+                amount,
+                currency,
+                category,
+                desc
+            });
+            saveData();
+            hideAddModal();
+            switchPage('dashboard');
+        }
+
+        function deleteTransaction(id) {
+            if (confirm('Удалить операцию?')) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveData();
+                switchPage(currentPage);
+            }
+        }
+
+        function addNewCategory() {
+            const name = prompt('Название новой категории:');
+            if (name && name.trim()) {
+                categories.push(name.trim());
+                saveData();
+                renderCategories();
+            }
+        }
+
+        function deleteCategory(cat) {
+            if (confirm(`Удалить категорию «${cat}»?`)) {
+                categories = categories.filter(c => c !== cat);
+                saveData();
+                renderCategories();
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('ОЧИСТИТЬ ВСЁ? Это нельзя отменить!')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function switchPage(page) {
+            currentPage = page;
+            if (page === 'dashboard') renderDashboard();
+            else if (page === 'transactions') renderTransactions();
+            else if (page === 'categories') renderCategories();
+            else if (page === 'converter') renderConverter();
+            else if (page === 'settings') renderSettings();
+        }
+
+        function updateNavActive() {
+            const navItems = document.querySelectorAll('#bottom-nav > div');
+            const pages = ['dashboard','transactions','categories','converter','settings'];
+            navItems.forEach((item, i) => {
+                if (pages[i] === currentPage) {
+                    item.classList.add('text-emerald-400');
+                    item.classList.remove('text-gray-400');
+                } else {
+                    item.classList.remove('text-emerald-400');
+                    item.classList.add('text-gray-400');
+                }
+            });
+        }
+
+        async function initApp() {
+            const tg = window.Telegram?.WebApp || {ready:()=>{}, expand:()=>{}, initDataUnsafe:{user:{first_name:'Тест'}}};
+            tg.ready();
+            tg.expand();
+
+            loadData();
+            await loadRates();
+
+            const userName = tg.initDataUnsafe?.user?.first_name || 'Пользователь';
+            document.getElementById('user-info').innerHTML = `👋 ${userName}<br><span class="text-xs bg-white/20 px-3 py-1 rounded-3xl">${baseCurrency}</span>`;
+
+            switchPage('dashboard');
+            console.log('%cМини-приложение готово! 🚀', 'color:#10b981;font-size:16px');
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
