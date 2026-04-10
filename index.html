@@ -10,22 +10,21 @@
         body { font-family: 'Inter', system-ui, sans-serif; }
     </style>
 </head>
-<body class="bg-zinc-950 text-white min-h-screen overflow-hidden">
+<body class="bg-zinc-950 text-white min-h-screen">
 
 <div class="max-w-md mx-auto min-h-screen bg-zinc-950 flex flex-col">
 
-    <!-- Верхняя панель - аватарка + юзернейм -->
+    <!-- Верхняя панель -->
     <div class="px-6 pt-12 pb-6 bg-gradient-to-b from-zinc-900 to-transparent flex items-center gap-3">
-        <div id="avatar" class="w-12 h-12 rounded-2xl overflow-hidden flex-shrink-0"></div>
+        <div id="avatar" class="w-12 h-12 rounded-2xl overflow-hidden bg-zinc-800 flex items-center justify-center text-3xl"></div>
         <div>
-            <div id="first_name" class="font-semibold text-xl"></div>
+            <div id="first_name" class="font-semibold text-xl">Загрузка...</div>
             <div id="username" class="text-sm text-zinc-400"></div>
         </div>
     </div>
 
-    <!-- Основное содержимое -->
-    <div id="content" class="flex-1 px-6 pt-8">
-        <p class="text-center text-zinc-400 mt-20">Главный экран скоро появится...</p>
+    <div class="flex-1 flex items-center justify-center">
+        <p class="text-zinc-400 text-center">Главный экран скоро появится...</p>
     </div>
 
 </div>
@@ -36,7 +35,7 @@
         
         if (tg) {
             tg.ready();
-            tg.expand();                    // Открывает на весь экран
+            tg.expand();           // Принудительно открываем на весь экран
 
             const user = tg.initDataUnsafe?.user || {};
 
@@ -45,12 +44,16 @@
             if (user.photo_url) {
                 avatarEl.innerHTML = `<img src="${user.photo_url}" class="w-full h-full object-cover">`;
             } else {
-                avatarEl.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center text-3xl">👤</div>`;
+                avatarEl.innerHTML = '👤';
             }
 
-            // Имя и юзернейм
+            // Имя
             document.getElementById('first_name').textContent = user.first_name || 'Пользователь';
             document.getElementById('username').textContent = user.username ? '@' + user.username : '';
+        } else {
+            // Если открыто не через Telegram (для теста)
+            document.getElementById('first_name').textContent = 'Пользователь';
+            document.getElementById('avatar').innerHTML = '👤';
         }
     }
 
