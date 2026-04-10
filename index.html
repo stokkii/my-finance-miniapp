@@ -171,14 +171,14 @@
             </div>
         </div>
 
-        <!-- НОВАЯ СТРАНИЦА: ПАНЕЛЬ ЗАДАНИЙ -->
+        <!-- PAGE TASKS -->
         <div id="page-tasks" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Задания</h2>
             <div id="tasks-list" class="space-y-4"></div>
         </div>
     </div>
 
-    <!-- BOTTOM NAV (добавлена одна новая кнопка) -->
+    <!-- BOTTOM NAV -->
     <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 bottom-nav">
         <div class="max-w-xl mx-auto grid grid-cols-6 text-xs font-medium">
             <div onclick="switchPage(1)" class="nav-item flex flex-col items-center py-3 text-emerald-600">🏠<br>Главная</div>
@@ -190,7 +190,7 @@
         </div>
     </div>
 
-    <!-- MODAL (остаётся без изменений) -->
+    <!-- MODAL -->
     <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" id="add-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <h2 id="modal-title" class="text-2xl font-semibold mb-6">Новая операция</h2>
@@ -265,7 +265,7 @@
             '#db2777', '#64748b', '#8b5cf6', '#f97316', '#a78bfa'
         ];
 
-        // ==================== ЗАДАНИЯ ====================
+        // ==================== ЗАДАНИЯ (с проверкой подписки) ====================
         let TASKS = [
             {
                 id: 1,
@@ -291,7 +291,7 @@
                         </div>
                         ${task.done ? 
                             `<div class="text-emerald-600 text-3xl">✅</div>` : 
-                            `<button onclick="completeTask(${task.id})" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-sm font-medium active:scale-95">Выполнить</button>`
+                            `<button onclick="attemptCompleteTask(${task.id})" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-sm font-medium active:scale-95">Выполнить</button>`
                         }
                     </div>
                 `;
@@ -299,17 +299,27 @@
             });
         }
 
-        function completeTask(id) {
+        // НОВАЯ ПРОВЕРКА: только после подписки
+        function attemptCompleteTask(id) {
             const task = TASKS.find(t => t.id === id);
             if (!task || task.done) return;
 
-            if (confirm(`Выполнить задание и получить +${task.reward} поинтов?`)) {
-                task.done = true;
-                USER_POINTS += task.reward;
-                document.getElementById('points-display').textContent = USER_POINTS;
-                renderTasks();
-                showToast(`+${task.reward} поинтов за задание! ✅`);
-            }
+            // Открываем канал
+            window.open(task.link, '_blank');
+
+            // Показываем инструкцию
+            setTimeout(() => {
+                if (confirm("Ты уже подписался на канал?\n\nНажми ОК, если подписка активна.")) {
+                    // Начисляем награду
+                    task.done = true;
+                    USER_POINTS += task.reward;
+                    document.getElementById('points-display').textContent = USER_POINTS;
+                    renderTasks();
+                    showToast(`+${task.reward} поинтов! Задание выполнено ✅`);
+                } else {
+                    showToast("Сначала подпишись на канал, потом нажми кнопку снова.");
+                }
+            }, 800);
         }
 
         function showPointsInfo() {
@@ -325,7 +335,7 @@
             return COLOR_PALETTE[index];
         }
 
-        // ==================== Весь твой оригинальный код ниже (без изменений) ====================
+        // ==================== Весь твой оригинальный код (без изменений) ====================
         async function loadRates() {
             try {
                 const res = await fetch('https://api.exchangerate.host/latest?base=USD');
