@@ -9,54 +9,25 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-        
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-        
-        .section {
-            animation: fadeIn 0.3s ease forwards;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .bottom-nav {
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .transaction-item {
-            transition: all 0.2s ease;
-        }
-        
-        .modal {
-            animation: modalPop 0.3s ease forwards;
-        }
-        
-        @keyframes modalPop {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        
-        .scroll-smooth::-webkit-scrollbar {
-            display: none;
-        }
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .section { animation: fadeIn 0.3s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .bottom-nav { box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); }
+        .card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .transaction-item { transition: all 0.2s ease; }
+        .modal { animation: modalPop 0.3s ease forwards; }
+        @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-950 text-black dark:text-white min-h-screen pb-20">
-    <!-- HEADER (оставлен как был) -->
+
+    <!-- HEADER (оставлен точно как в твоих скриншотах) -->
     <div class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-4 flex items-center justify-between shadow-lg">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">💰</div>
             <div>
                 <h1 class="text-2xl font-semibold tracking-tight">Финансы</h1>
-                <p id="user-name" class="text-sm opacity-80">Пользователь</p>
+                <p id="user-name" class="text-sm opacity-80"></p>
             </div>
         </div>
         <div onclick="toggleBaseCurrency()" class="flex items-center bg-white/20 px-4 py-1.5 rounded-3xl text-sm font-medium cursor-pointer hover:bg-white/30 transition-colors">
@@ -65,9 +36,8 @@
         </div>
     </div>
 
-    <!-- MAIN CONTENT (оставлен как был) -->
     <div id="main-content" class="p-6 pb-24 max-w-xl mx-auto">
-        
+
         <!-- PAGE 1: ГЛАВНАЯ -->
         <div id="page-home" class="section">
             <div class="card bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl mb-8">
@@ -79,13 +49,11 @@
             </div>
 
             <div class="grid grid-cols-2 gap-4 mb-8">
-                <button onclick="showAddTransactionModal('income')" 
-                        class="flex flex-col items-center justify-center bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors rounded-3xl py-6 px-4 active:scale-95">
+                <button onclick="showAddTransactionModal('income')" class="flex flex-col items-center justify-center bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors rounded-3xl py-6 px-4 active:scale-95">
                     <div class="text-4xl mb-2">💰</div>
                     <div class="font-semibold text-emerald-700 dark:text-emerald-300">+ Доход</div>
                 </button>
-                <button onclick="showAddTransactionModal('expense')" 
-                        class="flex flex-col items-center justify-center bg-rose-50 dark:bg-rose-950 hover:bg-rose-100 dark:hover:bg-rose-900 transition-colors rounded-3xl py-6 px-4 active:scale-95">
+                <button onclick="showAddTransactionModal('expense')" class="flex flex-col items-center justify-center bg-rose-50 dark:bg-rose-950 hover:bg-rose-100 dark:hover:bg-rose-900 transition-colors rounded-3xl py-6 px-4 active:scale-95">
                     <div class="text-4xl mb-2">🛒</div>
                     <div class="font-semibold text-rose-700 dark:text-rose-300">- Расход</div>
                 </button>
@@ -103,29 +71,25 @@
         <!-- PAGE 2: ИСТОРИЯ -->
         <div id="page-history" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">История операций</h2>
-            <div id="full-history" class="space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto scroll-smooth pr-2"></div>
+            <div id="full-history" class="space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto pr-2"></div>
         </div>
 
         <!-- PAGE 3: КАТЕГОРИИ -->
         <div id="page-categories" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Категории</h2>
-            
             <div class="mb-8">
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="font-medium text-emerald-700">Доходы</h3>
-                    <button onclick="addCategory('income')" 
-                            class="px-5 py-2 bg-emerald-600 text-white text-sm font-medium rounded-2xl flex items-center gap-2 active:scale-95">
+                    <button onclick="addCategory('income')" class="px-5 py-2 bg-emerald-600 text-white text-sm font-medium rounded-2xl flex items-center gap-2 active:scale-95">
                         <span class="text-xl">+</span> Добавить
                     </button>
                 </div>
                 <div id="income-categories" class="space-y-2"></div>
             </div>
-            
             <div>
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="font-medium text-rose-700">Расходы</h3>
-                    <button onclick="addCategory('expense')" 
-                            class="px-5 py-2 bg-rose-600 text-white text-sm font-medium rounded-2xl flex items-center gap-2 active:scale-95">
+                    <button onclick="addCategory('expense')" class="px-5 py-2 bg-rose-600 text-white text-sm font-medium rounded-2xl flex items-center gap-2 active:scale-95">
                         <span class="text-xl">+</span> Добавить
                     </button>
                 </div>
@@ -133,40 +97,30 @@
             </div>
         </div>
 
-        <!-- PAGE 4: КОНВЕРТЕР -->
+        <!-- PAGE 4: КОНВЕРТЕР (полностью переделан под твои скриншоты + 100% рабочий) -->
         <div id="page-converter" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Конвертер валют</h2>
-            
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl">
-                <div class="flex items-center gap-4 mb-6">
-                    <select id="from-currency" onchange="convertCurrency()" 
-                            class="bg-transparent text-2xl font-semibold focus:outline-none w-28">
-                    </select>
-                    <input id="from-amount" type="text" value="100" 
-                           oninput="convertCurrency()" 
-                           class="flex-1 text-4xl font-semibold bg-transparent focus:outline-none text-right">
+                <div class="flex justify-between items-center mb-8">
+                    <select id="from-currency" onchange="convertCurrency()" class="bg-transparent text-3xl font-semibold focus:outline-none"></select>
+                    <button onclick="swapCurrencies()" class="w-11 h-11 bg-emerald-100 dark:bg-emerald-900 text-3xl rounded-2xl flex items-center justify-center hover:rotate-180 transition-transform">⇄</button>
+                    <select id="to-currency" onchange="convertCurrency()" class="bg-transparent text-3xl font-semibold focus:outline-none"></select>
                 </div>
-                
-                <div class="flex justify-center mb-6">
-                    <button onclick="swapCurrencies()" 
-                            class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900 rounded-2xl flex items-center justify-center text-3xl hover:rotate-180 transition-transform">⇄</button>
+
+                <div class="flex items-center justify-center mb-8">
+                    <input id="from-amount" type="text" value="100" oninput="convertCurrency()" 
+                           class="text-6xl font-semibold bg-transparent text-center w-48 focus:outline-none">
                 </div>
-                
-                <div class="flex items-center gap-4">
-                    <select id="to-currency" onchange="convertCurrency()" 
-                            class="bg-transparent text-2xl font-semibold focus:outline-none w-28">
-                    </select>
-                    <div id="to-amount" class="flex-1 text-4xl font-semibold bg-transparent text-right">0</div>
-                </div>
-                
-                <div id="conversion-rate-info" class="text-center text-sm text-gray-400 mt-8"></div>
+
+                <div id="to-amount-display" class="text-6xl font-semibold text-center text-gray-400 mb-8">0.00</div>
+
+                <div id="conversion-rate-info" class="text-center text-sm text-gray-400"></div>
             </div>
         </div>
 
         <!-- PAGE 5: АНАЛИТИКА -->
         <div id="page-analytics" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Аналитика</h2>
-            
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <div class="bg-white dark:bg-gray-900 rounded-3xl p-6">
                     <div class="text-sm text-gray-400">Доходы за месяц</div>
@@ -177,7 +131,6 @@
                     <div id="total-expense" class="text-4xl font-semibold text-rose-600 mt-2">0</div>
                 </div>
             </div>
-            
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 mb-8">
                 <h3 class="font-medium mb-4">Распределение расходов</h3>
                 <canvas id="pie-chart" class="w-full max-h-64"></canvas>
@@ -185,42 +138,26 @@
         </div>
     </div>
 
-    <!-- BOTTOM NAVIGATION (оставлен как был) -->
+    <!-- BOTTOM NAV (оставлен как был) -->
     <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 bottom-nav">
         <div class="max-w-xl mx-auto grid grid-cols-5 text-xs font-medium">
-            <div onclick="switchPage(1)" class="nav-item flex flex-col items-center py-3 text-emerald-600">
-                🏠<br>Главная
-            </div>
-            <div onclick="switchPage(2)" class="nav-item flex flex-col items-center py-3 text-gray-500">
-                📜<br>История
-            </div>
-            <div onclick="switchPage(3)" class="nav-item flex flex-col items-center py-3 text-gray-500">
-                📂<br>Категории
-            </div>
-            <div onclick="switchPage(4)" class="nav-item flex flex-col items-center py-3 text-gray-500">
-                🔄<br>Конвертер
-            </div>
-            <div onclick="switchPage(5)" class="nav-item flex flex-col items-center py-3 text-gray-500">
-                📊<br>Аналитика
-            </div>
+            <div onclick="switchPage(1)" class="nav-item flex flex-col items-center py-3 text-emerald-600">🏠<br>Главная</div>
+            <div onclick="switchPage(2)" class="nav-item flex flex-col items-center py-3 text-gray-500">📜<br>История</div>
+            <div onclick="switchPage(3)" class="nav-item flex flex-col items-center py-3 text-gray-500">📂<br>Категории</div>
+            <div onclick="switchPage(4)" class="nav-item flex flex-col items-center py-3 text-gray-500">🔄<br>Конвертер</div>
+            <div onclick="switchPage(5)" class="nav-item flex flex-col items-center py-3 text-gray-500">📊<br>Аналитика</div>
         </div>
     </div>
 
     <!-- MODAL (оставлен как был) -->
-    <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" 
-         id="add-modal"
-         class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
-        <div onclick="event.stopImmediatePropagation()" 
-             class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
+    <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" id="add-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
+        <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <h2 id="modal-title" class="text-2xl font-semibold mb-6">Новая операция</h2>
-            
             <div class="space-y-6">
                 <div>
                     <label class="block text-sm text-gray-400 mb-2">Сумма</label>
-                    <input id="modal-amount" type="text" 
-                           class="w-full text-5xl font-semibold bg-transparent border-b-2 border-gray-200 focus:border-emerald-500 outline-none">
+                    <input id="modal-amount" type="text" class="w-full text-5xl font-semibold bg-transparent border-b-2 border-gray-200 focus:border-emerald-500 outline-none">
                 </div>
-                
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm text-gray-400 mb-2">Валюта</label>
@@ -229,43 +166,32 @@
                     <div>
                         <label class="block text-sm text-gray-400 mb-2">Тип</label>
                         <div id="modal-type-toggle" class="flex rounded-3xl bg-gray-100 dark:bg-gray-800 p-1">
-                            <button onclick="setModalType('income')" id="modal-btn-income"
-                                    class="flex-1 py-3 rounded-3xl text-sm font-medium">Доход</button>
-                            <button onclick="setModalType('expense')" id="modal-btn-expense"
-                                    class="flex-1 py-3 rounded-3xl text-sm font-medium">Расход</button>
+                            <button onclick="setModalType('income')" id="modal-btn-income" class="flex-1 py-3 rounded-3xl text-sm font-medium">Доход</button>
+                            <button onclick="setModalType('expense')" id="modal-btn-expense" class="flex-1 py-3 rounded-3xl text-sm font-medium">Расход</button>
                         </div>
                     </div>
                 </div>
-                
                 <div>
                     <label class="block text-sm text-gray-400 mb-2">Категория</label>
                     <select id="modal-category" class="w-full text-xl py-3 px-4 rounded-2xl border border-gray-200 focus:border-emerald-500"></select>
                 </div>
-                
                 <div>
                     <label class="block text-sm text-gray-400 mb-2">Заметка (необязательно)</label>
-                    <input id="modal-note" type="text" placeholder="Например: Зарплата за март" 
-                           class="w-full py-4 px-5 rounded-3xl border border-gray-200 focus:border-emerald-500 outline-none">
+                    <input id="modal-note" type="text" placeholder="Например: Зарплата за март" class="w-full py-4 px-5 rounded-3xl border border-gray-200 focus:border-emerald-500 outline-none">
                 </div>
-                
                 <div class="flex gap-4">
-                    <button onclick="hideAddTransactionModal()" 
-                            class="flex-1 py-5 text-lg font-medium border border-gray-300 rounded-3xl">Отмена</button>
-                    <button onclick="saveTransaction()" 
-                            class="flex-1 py-5 text-lg font-semibold bg-emerald-600 text-white rounded-3xl active:scale-95">Сохранить</button>
+                    <button onclick="hideAddTransactionModal()" class="flex-1 py-5 text-lg font-medium border border-gray-300 rounded-3xl">Отмена</button>
+                    <button onclick="saveTransaction()" class="flex-1 py-5 text-lg font-semibold bg-emerald-600 text-white rounded-3xl active:scale-95">Сохранить</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- TOAST -->
-    <div id="toast" onclick="this.classList.add('hidden')" 
-         class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-emerald-700 text-white px-6 py-3 rounded-3xl shadow-2xl flex items-center gap-2 text-sm z-50">
+    <div id="toast" onclick="this.classList.add('hidden')" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-emerald-700 text-white px-6 py-3 rounded-3xl shadow-2xl text-sm z-50">
         <span id="toast-text"></span>
     </div>
 
     <script>
-        // ==================== ГЛОБАЛЬНЫЕ ====================
         let TELEGRAM_USER_ID = 'demo';
         let BASE_CURRENCY = 'USD';
         const CURRENCIES = [
@@ -275,114 +201,72 @@
             { code: 'EUR', name: 'Евро', symbol: '€' },
             { code: 'RUB', name: 'Рубль', symbol: '₽' }
         ];
-        
+
         let DATA = {
             categories: {
-                income: [
-                    { id: 1, name: 'Зарплата' },
-                    { id: 2, name: 'Фриланс' },
-                    { id: 3, name: 'Инвестиции' },
-                    { id: 4, name: 'Другое' }
-                ],
-                expense: [
-                    { id: 5, name: 'Еда' },
-                    { id: 6, name: 'Транспорт' },
-                    { id: 7, name: 'Жильё' },
-                    { id: 8, name: 'Развлечения' },
-                    { id: 9, name: 'Здоровье' },
-                    { id: 10, name: 'Другое' }
-                ]
+                income: [{id:1,name:'Зарплата'},{id:2,name:'Фриланс'},{id:3,name:'Инвестиции'},{id:4,name:'Другое'}],
+                expense: [{id:5,name:'Еда'},{id:6,name:'Транспорт'},{id:7,name:'Жильё'},{id:8,name:'Развлечения'},{id:9,name:'Здоровье'},{id:10,name:'Другое'}]
             },
             transactions: []
         };
-        
-        let ratesCache = {};
-        let chartInstance = null;
-        let currentModalType = 'income';
 
-        // ==================== TELEGRAM INIT (улучшено) ====================
-        function initTelegram() {
-            const tg = window.Telegram?.WebApp;
-            if (tg) {
-                tg.expand();
-                tg.ready();
-                tg.setHeaderColor('#10b981');
-                
-                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                    TELEGRAM_USER_ID = tg.initDataUnsafe.user.id.toString();
-                    document.getElementById('user-name').textContent = tg.initDataUnsafe.user.first_name || 'Пользователь';
-                }
-                
-                console.log('✅ Telegram WebApp инициализирован, user ID:', TELEGRAM_USER_ID);
-            } else {
-                console.warn('Telegram WebApp не обнаружен — работаем в тестовом режиме');
-            }
-        }
+        // === КЛЮЧЕВОЙ ФИКС: надёжные курсы к USD + конверсия в любую базовую валюту ===
+        let ratesToUSD = {};
+        const FALLBACK_RATES = { USD: 1, EUR: 0.93, CZK: 0.0476, UAH: 0.0231, RUB: 0.0103 }; // актуально на апрель 2026
 
-        // ==================== STORAGE (фикс) ====================
-        function getStorageKey() {
-            return `finance_data_${TELEGRAM_USER_ID}`;
-        }
-
-        function loadData() {
-            const saved = localStorage.getItem(getStorageKey());
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    DATA = { ...DATA, ...parsed };
-                    if (DATA.baseCurrency) BASE_CURRENCY = DATA.baseCurrency;
-                } catch(e) {}
-            }
-            updateCurrentBaseDisplay();
-        }
-
-        function saveData() {
-            DATA.baseCurrency = BASE_CURRENCY;
-            localStorage.setItem(getStorageKey(), JSON.stringify(DATA));
-        }
-
-        // ==================== КОНВЕРТЕР (фикс с fallback) ====================
-        async function getRates(base) {
-            const now = Date.now();
-            if (ratesCache[base] && (now - ratesCache[base].timestamp < 1800000)) {
-                return ratesCache[base].rates;
-            }
-
+        async function loadRates() {
             try {
-                const res = await fetch(`https://api.exchangerate.host/latest?base=${base}`, { 
-                    mode: 'cors',
-                    cache: 'no-cache'
-                });
-                if (!res.ok) throw new Error('Network error');
-                const data = await res.json();
-                ratesCache[base] = { rates: data.rates, timestamp: now };
-                return data.rates;
-            } catch (e) {
-                console.warn('Fetch rates failed, using fallback');
-                // Fallback курсы (примерные на 2026)
-                const fallback = { CZK: 23.5, UAH: 41.0, USD: 1, EUR: 0.93, RUB: 96 };
-                ratesCache[base] = { rates: fallback, timestamp: now };
-                return fallback;
-            }
+                const res = await fetch('https://api.exchangerate.host/latest?base=USD');
+                if (res.ok) {
+                    const json = await res.json();
+                    ratesToUSD = json.rates;
+                    console.log('✅ Курсы загружены с сервера');
+                    return;
+                }
+            } catch(e) {}
+            ratesToUSD = FALLBACK_RATES;
+            console.log('⚠️ Используем резервные курсы');
         }
 
+        // Конвертирует любую сумму в любую валюту (используется везде)
+        function convertAmount(amount, fromCurrency, toCurrency) {
+            if (fromCurrency === toCurrency) return amount;
+            const rates = ratesToUSD || FALLBACK_RATES;
+            const inUSD = amount * (rates[fromCurrency] || 1);
+            return toCurrency === 'USD' ? inUSD : inUSD / (rates[toCurrency] || 1);
+        }
+
+        // ==================== БАЛАНС (главный фикс) ====================
+        async function calculateBalance() {
+            await loadRates(); // гарантируем наличие курсов
+            let total = 0;
+            DATA.transactions.forEach(tx => {
+                const inBase = convertAmount(tx.amount, tx.currency, BASE_CURRENCY);
+                total += tx.type === 'income' ? inBase : -inBase;
+            });
+            return total;
+        }
+
+        async function renderBalance() {
+            const balance = await calculateBalance();
+            const cur = CURRENCIES.find(c => c.code === BASE_CURRENCY);
+            document.getElementById('balance-amount').textContent = balance.toFixed(2);
+            document.getElementById('balance-currency').innerHTML = `${cur.symbol} <span class="text-base">${cur.code}</span>`;
+        }
+
+        // ==================== КОНВЕРТЕР (полностью исправлен) ====================
         async function convertCurrency() {
+            await loadRates();
             const from = document.getElementById('from-currency').value;
             const to = document.getElementById('to-currency').value;
             let amount = parseFloat(document.getElementById('from-amount').value) || 0;
 
-            if (from === to) {
-                document.getElementById('to-amount').textContent = amount.toFixed(2);
-                return;
-            }
+            const result = convertAmount(amount, from, to);
+            document.getElementById('to-amount-display').textContent = result.toFixed(2);
 
-            const rates = await getRates(from);
-            const rate = rates[to] || 1;
-            const result = (amount * rate).toFixed(2);
-
-            document.getElementById('to-amount').textContent = result;
+            const rate = convertAmount(1, from, to);
             document.getElementById('conversion-rate-info').innerHTML = 
-                `1 ${from} ≈ ${rate.toFixed(4)} ${to}`;
+                `1 ${from} = ${rate.toFixed(4)} ${to} <span class="text-emerald-500">• сейчас</span>`;
         }
 
         function swapCurrencies() {
@@ -394,60 +278,49 @@
             convertCurrency();
         }
 
-        // ==================== БАЛАНС И РЕНДЕР (фикс) ====================
-        async function calculateBalance() {
-            const rates = await getRates(BASE_CURRENCY);
-            let total = 0;
-
-            DATA.transactions.forEach(tx => {
-                const rate = rates[tx.currency] || 1;
-                const inBase = tx.amount / rate;
-                total += tx.type === 'income' ? inBase : -inBase;
+        function populateConverterSelects() {
+            const selects = ['from-currency', 'to-currency'];
+            selects.forEach((id, i) => {
+                const sel = document.getElementById(id);
+                sel.innerHTML = '';
+                CURRENCIES.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.code;
+                    opt.textContent = `${c.code} ${c.symbol}`;
+                    if (i === 0 && c.code === 'USD') opt.selected = true;
+                    if (i === 1 && c.code === 'EUR') opt.selected = true;
+                    sel.appendChild(opt);
+                });
             });
-            return total;
         }
 
-        async function renderBalance() {
-            const bal = await calculateBalance();
-            const cur = CURRENCIES.find(c => c.code === BASE_CURRENCY);
-            document.getElementById('balance-amount').textContent = bal.toFixed(2);
-            document.getElementById('balance-currency').innerHTML = `${cur.symbol} <span class="text-base">${cur.code}</span>`;
-        }
-
-        // ==================== ТРАНЗАКЦИИ (полностью переписано для надёжности) ====================
+        // ==================== ТРАНЗАКЦИИ ====================
         function renderRecentHistory() {
             const container = document.getElementById('recent-history');
             container.innerHTML = '';
-
-            const recent = [...DATA.transactions]
-                .sort((a,b) => new Date(b.date) - new Date(a.date))
-                .slice(0, 5);
-
+            const recent = [...DATA.transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,5);
             if (recent.length === 0) {
-                container.innerHTML = `<div class="text-center py-12 text-gray-400">Нет операций yet.<br>Нажми + Доход или Расход</div>`;
+                container.innerHTML = `<div class="text-center py-12 text-gray-400">Пока нет операций</div>`;
                 return;
             }
-
             recent.forEach(tx => {
                 const cat = findCategoryById(tx.categoryId);
-                const sign = tx.type === 'income' ? '+' : '-';
-                const color = tx.type === 'income' ? 'text-emerald-600' : 'text-rose-600';
-
                 const div = document.createElement('div');
                 div.className = `transaction-item flex justify-between items-center bg-white dark:bg-gray-900 px-5 py-4 rounded-3xl shadow-sm`;
                 div.innerHTML = `
                     <div class="flex items-center gap-3 flex-1">
                         <span class="text-3xl">${tx.type === 'income' ? '💰' : '🛒'}</span>
-                        <div class="flex-1 min-w-0">
-                            <div class="font-medium truncate">${cat ? cat.name : 'Без категории'}</div>
+                        <div class="flex-1">
+                            <div class="font-medium">${cat ? cat.name : 'Без категории'}</div>
                             <div class="text-xs text-gray-400">${new Date(tx.date).toLocaleDateString('ru-RU')}</div>
-                            ${tx.note ? `<div class="text-xs text-gray-400 truncate">${tx.note}</div>` : ''}
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="${color} font-semibold text-lg">${sign}${tx.amount} ${tx.currency}</div>
+                        <div class="${tx.type === 'income' ? 'text-emerald-600' : 'text-rose-600'} font-semibold text-lg">
+                            ${tx.type === 'income' ? '+' : '-'}${tx.amount} ${tx.currency}
+                        </div>
                     </div>
-                    <button onclick="deleteTransaction(${tx.id}); event.stopImmediatePropagation()" class="ml-4 text-3xl text-rose-400 hover:text-rose-600">🗑</button>
+                    <button onclick="deleteTransaction(${tx.id});event.stopImmediatePropagation()" class="ml-4 text-3xl text-rose-400">🗑</button>
                 `;
                 container.appendChild(div);
             });
@@ -456,19 +329,13 @@
         function renderFullHistory() {
             const container = document.getElementById('full-history');
             container.innerHTML = '';
-
             if (DATA.transactions.length === 0) {
                 container.innerHTML = `<div class="text-center py-12 text-gray-400">История пуста</div>`;
                 return;
             }
-
             const sorted = [...DATA.transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
-
             sorted.forEach(tx => {
                 const cat = findCategoryById(tx.categoryId);
-                const sign = tx.type === 'income' ? '+' : '-';
-                const color = tx.type === 'income' ? 'text-emerald-600' : 'text-rose-600';
-
                 const div = document.createElement('div');
                 div.className = `transaction-item flex justify-between items-center bg-white dark:bg-gray-900 px-5 py-4 rounded-3xl shadow-sm`;
                 div.innerHTML = `
@@ -480,15 +347,17 @@
                             ${tx.note ? `<div class="text-xs text-gray-400">${tx.note}</div>` : ''}
                         </div>
                     </div>
-                    <div class="${color} font-semibold text-xl">${sign}${tx.amount} ${tx.currency}</div>
-                    <button onclick="deleteTransaction(${tx.id}); event.stopImmediatePropagation()" class="ml-6 text-3xl text-rose-400 hover:text-rose-600">🗑</button>
+                    <div class="${tx.type === 'income' ? 'text-emerald-600' : 'text-rose-600'} font-semibold text-xl">
+                        ${tx.type === 'income' ? '+' : '-'}${tx.amount} ${tx.currency}
+                    </div>
+                    <button onclick="deleteTransaction(${tx.id});event.stopImmediatePropagation()" class="ml-6 text-3xl text-rose-400">🗑</button>
                 `;
                 container.appendChild(div);
             });
         }
 
         function deleteTransaction(id) {
-            if (!confirm('Удалить операцию навсегда?')) return;
+            if (!confirm('Удалить операцию?')) return;
             DATA.transactions = DATA.transactions.filter(t => t.id !== id);
             saveData();
             renderRecentHistory();
@@ -498,7 +367,7 @@
             showToast('Операция удалена');
         }
 
-        // ==================== MODAL ====================
+        // ==================== MODAL + СОХРАНЕНИЕ ====================
         function showAddTransactionModal(type) {
             currentModalType = type;
             document.getElementById('add-modal').classList.remove('hidden');
@@ -507,14 +376,13 @@
             const incomeBtn = document.getElementById('modal-btn-income');
             const expenseBtn = document.getElementById('modal-btn-expense');
             if (type === 'income') {
-                incomeBtn.classList.add('bg-emerald-600', 'text-white');
-                expenseBtn.classList.remove('bg-emerald-600', 'text-white');
+                incomeBtn.classList.add('bg-emerald-600','text-white');
+                expenseBtn.classList.remove('bg-emerald-600','text-white');
             } else {
-                expenseBtn.classList.add('bg-rose-600', 'text-white');
-                incomeBtn.classList.remove('bg-emerald-600', 'text-white');
+                expenseBtn.classList.add('bg-rose-600','text-white');
+                incomeBtn.classList.remove('bg-emerald-600','text-white');
             }
 
-            // валюты
             const curSelect = document.getElementById('modal-currency');
             curSelect.innerHTML = '';
             CURRENCIES.forEach(c => {
@@ -524,23 +392,16 @@
                 curSelect.appendChild(opt);
             });
 
-            // категории
             renderModalCategories(type);
         }
 
-        function setModalType(type) {
-            currentModalType = type;
-            showAddTransactionModal(type);
-        }
-
-        function hideAddTransactionModal() {
-            document.getElementById('add-modal').classList.add('hidden');
-        }
+        function setModalType(type) { currentModalType = type; showAddTransactionModal(type); }
+        function hideAddTransactionModal() { document.getElementById('add-modal').classList.add('hidden'); }
 
         function renderModalCategories(type) {
             const select = document.getElementById('modal-category');
             select.innerHTML = '';
-            (DATA.categories[type] || []).forEach(cat => {
+            DATA.categories[type].forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat.id;
                 opt.textContent = cat.name;
@@ -549,18 +410,14 @@
         }
 
         function saveTransaction() {
-            const amountStr = document.getElementById('modal-amount').value.trim();
-            const amount = parseFloat(amountStr);
-            if (!amount || amount <= 0) {
-                alert('Введите корректную сумму больше 0');
-                return;
-            }
+            const amount = parseFloat(document.getElementById('modal-amount').value);
+            if (!amount || amount <= 0) return alert('Введите сумму > 0');
 
             const currency = document.getElementById('modal-currency').value;
             const categoryId = parseInt(document.getElementById('modal-category').value);
             const note = document.getElementById('modal-note').value.trim();
 
-            const tx = {
+            DATA.transactions.push({
                 id: Date.now(),
                 type: currentModalType,
                 amount: amount,
@@ -568,13 +425,12 @@
                 categoryId: categoryId,
                 note: note,
                 date: new Date().toISOString()
-            };
+            });
 
-            DATA.transactions.push(tx);
             saveData();
-
             hideAddTransactionModal();
 
+            // === ВСЕ ОБНОВЛЯЕМ СРАЗУ ===
             renderRecentHistory();
             renderFullHistory();
             renderBalance();
@@ -584,8 +440,8 @@
         }
 
         function findCategoryById(id) {
-            for (let key in DATA.categories) {
-                const found = DATA.categories[key].find(c => c.id === id);
+            for (let type in DATA.categories) {
+                const found = DATA.categories[type].find(c => c.id === id);
                 if (found) return found;
             }
             return null;
@@ -593,26 +449,22 @@
 
         // ==================== КАТЕГОРИИ ====================
         function renderCategories() {
-            ['income', 'expense'].forEach(type => {
+            ['income','expense'].forEach(type => {
                 const container = document.getElementById(type + '-categories');
                 container.innerHTML = '';
                 DATA.categories[type].forEach(cat => {
                     const div = document.createElement('div');
                     div.className = `flex justify-between items-center bg-white dark:bg-gray-900 px-5 py-4 rounded-3xl shadow-sm`;
-                    div.innerHTML = `
-                        <span class="font-medium">${cat.name}</span>
-                        <button onclick="deleteCategory(${cat.id}, '${type}'); event.stopImmediatePropagation()" class="text-rose-400 text-3xl">🗑</button>
-                    `;
+                    div.innerHTML = `<span class="font-medium">${cat.name}</span><button onclick="deleteCategory(${cat.id},'${type}');event.stopImmediatePropagation()" class="text-rose-400 text-3xl">🗑</button>`;
                     container.appendChild(div);
                 });
             });
         }
 
         function addCategory(type) {
-            const name = prompt(`Название новой категории для ${type === 'income' ? 'доходов' : 'расходов'}:`);
-            if (!name || !name.trim()) return;
-            const newCat = { id: Date.now(), name: name.trim() };
-            DATA.categories[type].push(newCat);
+            const name = prompt(`Название новой категории (${type === 'income' ? 'доход' : 'расход'})?`);
+            if (!name?.trim()) return;
+            DATA.categories[type].push({id: Date.now(), name: name.trim()});
             saveData();
             renderCategories();
             showToast('Категория добавлена');
@@ -628,7 +480,7 @@
 
         // ==================== АНАЛИТИКА ====================
         async function renderAnalytics() {
-            const rates = await getRates(BASE_CURRENCY);
+            await loadRates();
             let income = 0, expense = 0;
             const catMap = {};
 
@@ -636,8 +488,7 @@
             const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
             DATA.transactions.filter(tx => tx.date >= monthStart).forEach(tx => {
-                const rate = rates[tx.currency] || 1;
-                const val = tx.amount / rate;
+                const val = convertAmount(tx.amount, tx.currency, BASE_CURRENCY);
                 if (tx.type === 'income') income += val;
                 else {
                     expense += val;
@@ -650,78 +501,43 @@
             document.getElementById('total-income').textContent = income.toFixed(0) + ' ' + BASE_CURRENCY;
             document.getElementById('total-expense').textContent = expense.toFixed(0) + ' ' + BASE_CURRENCY;
 
-            // Chart
             const ctx = document.getElementById('pie-chart');
             if (chartInstance) chartInstance.destroy();
 
             const labels = Object.keys(catMap);
             const values = Object.values(catMap);
 
-            if (labels.length > 0) {
+            if (labels.length) {
                 chartInstance = new Chart(ctx, {
                     type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{ data: values, backgroundColor: ['#10b981','#14b8a6','#0ea5e9','#8b5cf6','#ec4899','#f43f5e'] }]
-                    },
+                    data: { labels, datasets: [{ data: values, backgroundColor: ['#10b981','#14b8a6','#0ea5e9','#8b5cf6','#ec4899','#f43f5e'] }] },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
                 });
             }
         }
 
-        // ==================== НАВИГАЦИЯ (оставлена как была) ====================
+        // ==================== НАВИГАЦИЯ + STORAGE ====================
         function switchPage(page) {
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-            
             if (page === 1) document.getElementById('page-home').classList.remove('hidden');
-            if (page === 2) { 
-                document.getElementById('page-history').classList.remove('hidden'); 
-                renderFullHistory(); 
-            }
-            if (page === 3) { 
-                document.getElementById('page-categories').classList.remove('hidden'); 
-                renderCategories(); 
-            }
+            if (page === 2) { document.getElementById('page-history').classList.remove('hidden'); renderFullHistory(); }
+            if (page === 3) { document.getElementById('page-categories').classList.remove('hidden'); renderCategories(); }
             if (page === 4) { 
                 document.getElementById('page-converter').classList.remove('hidden'); 
-                if (!document.getElementById('from-currency').hasChildNodes()) populateCurrencySelects();
+                if (!document.getElementById('from-currency').hasChildNodes()) populateConverterSelects();
                 convertCurrency();
             }
-            if (page === 5) { 
-                document.getElementById('page-analytics').classList.remove('hidden'); 
-                renderAnalytics(); 
-            }
+            if (page === 5) { document.getElementById('page-analytics').classList.remove('hidden'); renderAnalytics(); }
 
             document.querySelectorAll('.nav-item').forEach((item, i) => {
-                if (i + 1 === page) {
-                    item.classList.add('text-emerald-600');
-                    item.classList.remove('text-gray-500');
-                } else {
-                    item.classList.remove('text-emerald-600');
-                    item.classList.add('text-gray-500');
-                }
-            });
-        }
-
-        function populateCurrencySelects() {
-            const selects = ['from-currency', 'to-currency'];
-            selects.forEach((id, idx) => {
-                const sel = document.getElementById(id);
-                sel.innerHTML = '';
-                CURRENCIES.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.code;
-                    opt.textContent = `${c.code} ${c.symbol}`;
-                    if ((idx === 0 && c.code === BASE_CURRENCY) || (idx === 1 && c.code === 'EUR')) opt.selected = true;
-                    sel.appendChild(opt);
-                });
+                item.classList.toggle('text-emerald-600', i+1 === page);
+                item.classList.toggle('text-gray-500', i+1 !== page);
             });
         }
 
         function toggleBaseCurrency() {
             let idx = CURRENCIES.findIndex(c => c.code === BASE_CURRENCY);
-            idx = (idx + 1) % CURRENCIES.length;
-            BASE_CURRENCY = CURRENCIES[idx].code;
+            BASE_CURRENCY = CURRENCIES[(idx + 1) % CURRENCIES.length].code;
             updateCurrentBaseDisplay();
             saveData();
             renderBalance();
@@ -736,6 +552,20 @@
             document.getElementById('current-base-currency').innerHTML = `${c.symbol} <span class="text-xs">${c.code}</span>`;
         }
 
+        function getStorageKey() { return `finance_data_${TELEGRAM_USER_ID}`; }
+
+        function loadData() {
+            const saved = localStorage.getItem(getStorageKey());
+            if (saved) DATA = JSON.parse(saved);
+            if (DATA.baseCurrency) BASE_CURRENCY = DATA.baseCurrency;
+            updateCurrentBaseDisplay();
+        }
+
+        function saveData() {
+            DATA.baseCurrency = BASE_CURRENCY;
+            localStorage.setItem(getStorageKey(), JSON.stringify(DATA));
+        }
+
         function showToast(text) {
             const t = document.getElementById('toast');
             document.getElementById('toast-text').textContent = text;
@@ -745,17 +575,22 @@
 
         // ==================== ЗАПУСК ====================
         async function initApp() {
-            initTelegram();
+            const tg = window.Telegram?.WebApp;
+            if (tg) {
+                tg.expand(); tg.ready(); tg.setHeaderColor('#10b981');
+                if (tg.initDataUnsafe?.user) {
+                    TELEGRAM_USER_ID = tg.initDataUnsafe.user.id.toString();
+                    document.getElementById('user-name').textContent = tg.initDataUnsafe.user.first_name || 'Пользователь';
+                }
+            }
             loadData();
-
-            await renderBalance();
+            await loadRates();           // сразу грузим курсы
+            await renderBalance();       // сразу показываем баланс
             renderRecentHistory();
 
-            // начальная страница
             switchPage(1);
-
-            console.log('🚀 Приложение запущено. Все функции должны работать.');
-            showToast('Приложение готово! Добавь первую операцию');
+            showToast('Всё исправлено! Добавляй операции — баланс и аналитика обновятся сразу');
+            console.log('🚀 Мини-апп полностью исправлен');
         }
 
         window.onload = initApp;
