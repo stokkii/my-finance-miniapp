@@ -127,7 +127,7 @@
             </div>
         </div>
 
-        <!-- PAGE 4: КОНВЕРТЕР -->
+        <!-- PAGE 4: КОНВЕРТЕР (исправленный) -->
         <div id="page-converter" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Конвертер валют</h2>
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl">
@@ -142,6 +142,7 @@
                 </div>
                 <div id="to-amount-display" class="text-6xl font-semibold text-center text-gray-400 mb-8">0.00</div>
                 <div id="conversion-rate-info" class="text-center text-sm text-gray-400"></div>
+                <div id="last-update" class="text-center text-xs text-gray-500 mt-4"></div>
             </div>
         </div>
 
@@ -247,14 +248,15 @@
         };
 
         let ratesToUSD = {};
-        // Обновлённые актуальные fallback-курсы (на апрель 2026)
         const FALLBACK_RATES = { 
             USD: 1, 
-            EUR: 0.855,   // 1 USD ≈ 0.855 EUR
+            EUR: 0.855, 
             CZK: 0.043, 
             UAH: 0.024, 
             RUB: 0.0105 
         };
+
+        let rateUpdateInterval = null;
 
         async function loadRates() {
             try {
@@ -262,13 +264,23 @@
                 if (res.ok) {
                     const json = await res.json();
                     ratesToUSD = json.rates;
-                    console.log('✅ Курсы валют загружены с API');
-                    return;
+                    updateLastUpdateTime();
+                    console.log('✅ Курсы валют успешно обновлены');
+                    return true;
                 }
-            } catch(e) {
-                console.warn('Не удалось загрузить курсы, используем fallback');
-            }
+            } catch(e) {}
             ratesToUSD = FALLBACK_RATES;
+            updateLastUpdateTime();
+            console.warn('Используем fallback курсы');
+            return false;
+        }
+
+        function updateLastUpdateTime() {
+            const el = document.getElementById('last-update');
+            if (el) {
+                const now = new Date();
+                el.textContent = `Обновлено: ${now.toLocaleTimeString('ru-RU')}`;
+            }
         }
 
         function convertAmount(amount, fromCurrency, toCurrency) {
@@ -295,15 +307,16 @@
             document.getElementById('balance-currency').innerHTML = `${cur.symbol} <span class="text-base">${cur.code}</span>`;
         }
 
-        // Конвертер (исправлен)
+        // Исправленный конвертер
         async function convertCurrency() {
             await loadRates();
             const from = document.getElementById('from-currency').value;
             const to = document.getElementById('to-currency').value;
             let amount = parseFloat(document.getElementById('from-amount').value) || 0;
+
             const result = convertAmount(amount, from, to);
             document.getElementById('to-amount-display').textContent = result.toFixed(2);
-            
+
             const rate = convertAmount(1, from, to);
             document.getElementById('conversion-rate-info').innerHTML = 
                 `1 ${from} = ${rate.toFixed(4)} ${to}`;
@@ -312,7 +325,9 @@
         function swapCurrencies() {
             const f = document.getElementById('from-currency');
             const t = document.getElementById('to-currency');
-            const temp = f.value; f.value = t.value; t.value = temp;
+            const temp = f.value; 
+            f.value = t.value; 
+            t.value = temp;
             convertCurrency();
         }
 
@@ -332,7 +347,18 @@
             });
         }
 
-        // === ЕДИНАЯ СИСТЕМА ЦВЕТОВ (исправлено) ===
+        // Автообновление курсов каждые 30 минут
+        function startRateAutoUpdate() {
+            if (rateUpdateInterval) clearInterval(rateUpdateInterval);
+            rateUpdateInterval = setInterval(async () => {
+                await loadRates();
+                if (!document.getElementById('page-converter').classList.contains('hidden')) {
+                    convertCurrency();
+                }
+            }, 30 * 60 * 1000); // 30 минут
+        }
+
+        // === ЕДИНАЯ СИСТЕМА ЦВЕТОВ ===
         const CATEGORY_COLORS = {
             'Еда': '#10b981',
             'Транспорт': '#3b82f6',
@@ -346,7 +372,7 @@
             return CATEGORY_COLORS[name] || '#10b981';
         }
 
-        // Остальные функции (renderRecentHistory, renderFullHistory, deleteTransaction и т.д.) оставлены без изменений
+        // Остальные функции (без изменений, сокращённо для экономии места)
         function renderRecentHistory() {
             const container = document.getElementById('recent-history');
             container.innerHTML = '';
@@ -572,7 +598,6 @@
 
             const sortedCategories = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
 
-            // Прогресс-бары
             sortedCategories.forEach(([name, amount]) => {
                 const percent = ((amount / totalExpense) * 100).toFixed(1);
                 const color = getCategoryColor(name);
@@ -594,7 +619,6 @@
                 distributionContainer.appendChild(div);
             });
 
-            // Круговая диаграмма с теми же цветами
             const ctx = document.getElementById('pie-chart');
             if (chartInstance) chartInstance.destroy();
 
@@ -617,9 +641,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '68%',
-                    plugins: { 
-                        legend: { display: false }
-                    }
+                    plugins: { legend: { display: false } }
                 }
             });
         }
@@ -721,8 +743,10 @@
             applyTelegramTheme();
             switchPage(1);
 
-            showToast('Конвертер и цвета исправлены ✅');
-            console.log('🚀 Финансы Mini App — все фиксы применены');
+            startRateAutoUpdate();   // Запускаем автообновление курсов
+
+            showToast('Конвертер валют исправлен + автообновление каждые 30 мин');
+            console.log('🚀 Финансы Mini App — конвертер полностью исправлен');
         }
 
         window.onload = initApp;
