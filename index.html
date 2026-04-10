@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <title>Финансы • Личный помощник</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-        body { font-family: 'Inter', system-ui, sans-serif; }
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            transition: background-color 0.3s ease;
+        }
         .section { animation: fadeIn 0.3s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .bottom-nav { box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); }
@@ -21,30 +21,30 @@
         .modal { animation: modalPop 0.3s ease forwards; }
         @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
        
-        /* Уменьшение шрифтов и элементов на ~22-25% по всей аппке */
-        .text-5xl { font-size: 2.25rem !important; line-height: 2.5rem; }
-        .text-6xl { font-size: 2.8rem !important; line-height: 3rem; }
-        .text-4xl { font-size: 1.8rem !important; line-height: 2rem; }
-        .text-3xl { font-size: 1.6rem !important; line-height: 1.8rem; }
-        .text-2xl { font-size: 1.35rem !important; line-height: 1.6rem; }
-        .text-xl { font-size: 1.15rem !important; line-height: 1.4rem; }
-        .text-lg { font-size: 1.05rem !important; line-height: 1.3rem; }
+        /* Уменьшение шрифтов */
+        .text-5xl { font-size: 2.25rem; line-height: 2.5rem; }
+        .text-6xl { font-size: 2.8rem; line-height: 3rem; }
+        .text-4xl { font-size: 1.8rem; line-height: 2rem; }
+        .text-3xl { font-size: 1.6rem; line-height: 1.8rem; }
+        .text-2xl { font-size: 1.35rem; line-height: 1.6rem; }
+        .text-xl { font-size: 1.15rem; line-height: 1.4rem; }
+        .text-lg { font-size: 1.05rem; line-height: 1.3rem; }
        
-        .py-6 { padding-top: 1.35rem !important; padding-bottom: 1.35rem !important; }
-        .px-5 { padding-left: 1.1rem !important; padding-right: 1.1rem !important; }
-        .py-4 { padding-top: 0.9rem !important; padding-bottom: 0.9rem !important; }
-        .rounded-3xl { border-radius: 1.4rem !important; }
+        .py-6 { padding-top: 1.4rem; padding-bottom: 1.4rem; }
+        .px-5 { padding-left: 1.1rem; padding-right: 1.1rem; }
+        .py-4 { padding-top: 0.9rem; padding-bottom: 0.9rem; }
+        .rounded-3xl { border-radius: 1.4rem; }
        
-        /* Баланс — компактнее */
-        #balance-amount { font-size: 2.35rem !important; line-height: 2.6rem; font-weight: 600; }
+        #balance-amount { font-size: 2.4rem; line-height: 2.6rem; font-weight: 600; }
        
-        /* Аналитика — компактнее */
-        .analytics-number { font-size: 2.05rem !important; line-height: 2.3rem; font-weight: 600; }
+        .analytics-grid { gap: 1rem; }
+        .analytics-card { padding: 1.25rem; }
+        .analytics-number { font-size: 2.1rem; line-height: 2.3rem; font-weight: 600; }
     </style>
 </head>
-<body class="bg-white dark:bg-gray-950 text-black dark:text-white min-h-screen pb-20">
-    <!-- HEADER (без изменений) -->
-    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-4 flex items-center justify-between shadow-lg">
+<body class="bg-white dark:bg-gray-950 text-black dark:text-white min-h-screen pb-20 transition-colors duration-300">
+    <!-- HEADER -->
+    <div id="header" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-4 flex items-center justify-between shadow-lg">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">💰</div>
             <div>
@@ -59,7 +59,6 @@
     </div>
 
     <div id="main-content" class="p-6 pb-24 max-w-xl mx-auto">
-
         <!-- PAGE 1: ГЛАВНАЯ -->
         <div id="page-home" class="section">
             <div class="card bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl mb-8">
@@ -69,7 +68,6 @@
                     <div id="balance-currency" class="text-2xl font-medium text-emerald-600"></div>
                 </div>
             </div>
-
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <button onclick="showAddTransactionModal('income')" class="flex flex-col items-center justify-center bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors rounded-3xl py-5 px-4 active:scale-95">
                     <div class="text-4xl mb-2">💰</div>
@@ -80,7 +78,6 @@
                     <div class="font-semibold text-rose-700 dark:text-rose-300">- Расход</div>
                 </button>
             </div>
-
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="font-semibold text-lg">Последние операции</h2>
                 <button onclick="switchPage(2)" class="text-emerald-600 text-sm font-medium flex items-center gap-1">
@@ -129,7 +126,8 @@
                     <select id="to-currency" onchange="convertCurrency()" class="bg-transparent text-3xl font-semibold focus:outline-none"></select>
                 </div>
                 <div class="flex items-center justify-center mb-8">
-                    <input id="from-amount" type="text" value="100" oninput="convertCurrency()" class="text-6xl font-semibold bg-transparent text-center w-48 focus:outline-none">
+                    <input id="from-amount" type="text" value="100" oninput="convertCurrency()"
+                           class="text-6xl font-semibold bg-transparent text-center w-48 focus:outline-none">
                 </div>
                 <div id="to-amount-display" class="text-6xl font-semibold text-center text-gray-400 mb-8">0.00</div>
                 <div id="conversion-rate-info" class="text-center text-sm text-gray-400"></div>
@@ -140,12 +138,12 @@
         <div id="page-analytics" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Аналитика</h2>
            
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="bg-white dark:bg-gray-900 rounded-3xl p-6">
+            <div class="analytics-grid grid grid-cols-2 gap-4 mb-8">
+                <div class="analytics-card bg-white dark:bg-gray-900 rounded-3xl p-6">
                     <div class="text-sm text-gray-400">Доходы за месяц</div>
                     <div id="total-income" class="analytics-number text-emerald-600 mt-1">0</div>
                 </div>
-                <div class="bg-white dark:bg-gray-900 rounded-3xl p-6">
+                <div class="analytics-card bg-white dark:bg-gray-900 rounded-3xl p-6">
                     <div class="text-sm text-gray-400">Расходы за месяц</div>
                     <div id="total-expense" class="analytics-number text-rose-600 mt-1">0</div>
                 </div>
@@ -156,14 +154,12 @@
                 <div class="flex justify-center mb-6">
                     <canvas id="pie-chart" class="w-full max-h-60"></canvas>
                 </div>
-               
-                <!-- Новый блок с процентами -->
                 <div id="percent-list" class="space-y-3 text-sm"></div>
             </div>
         </div>
     </div>
 
-    <!-- BOTTOM NAV (без изменений) -->
+    <!-- BOTTOM NAV -->
     <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 bottom-nav">
         <div class="max-w-xl mx-auto grid grid-cols-5 text-xs font-medium">
             <div onclick="switchPage(1)" class="nav-item flex flex-col items-center py-3 text-emerald-600">🏠<br>Главная</div>
@@ -174,7 +170,7 @@
         </div>
     </div>
 
-    <!-- MODAL (без изменений) -->
+    <!-- MODAL -->
     <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" id="add-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <h2 id="modal-title" class="text-2xl font-semibold mb-6">Новая операция</h2>
@@ -226,6 +222,7 @@
             { code: 'EUR', name: 'Евро', symbol: '€' },
             { code: 'RUB', name: 'Рубль', symbol: '₽' }
         ];
+
         let DATA = {
             categories: {
                 income: [{id:1,name:'Зарплата'},{id:2,name:'Фриланс'},{id:3,name:'Инвестиции'},{id:4,name:'Другое'}],
@@ -233,8 +230,10 @@
             },
             transactions: []
         };
+
         let ratesToUSD = {};
         const FALLBACK_RATES = { USD: 1, EUR: 0.93, CZK: 0.0476, UAH: 0.0231, RUB: 0.0103 };
+
         async function loadRates() {
             try {
                 const res = await fetch('https://api.exchangerate.host/latest?base=USD');
@@ -246,12 +245,14 @@
             } catch(e) {}
             ratesToUSD = FALLBACK_RATES;
         }
+
         function convertAmount(amount, fromCurrency, toCurrency) {
             if (fromCurrency === toCurrency) return amount;
             const rates = ratesToUSD || FALLBACK_RATES;
             const inUSD = amount * (rates[fromCurrency] || 1);
             return toCurrency === 'USD' ? inUSD : inUSD / (rates[toCurrency] || 1);
         }
+
         async function calculateBalance() {
             await loadRates();
             let total = 0;
@@ -261,12 +262,15 @@
             });
             return total;
         }
+
         async function renderBalance() {
             const balance = await calculateBalance();
             const cur = CURRENCIES.find(c => c.code === BASE_CURRENCY);
             document.getElementById('balance-amount').textContent = balance.toLocaleString('ru-RU');
             document.getElementById('balance-currency').innerHTML = `${cur.symbol} <span class="text-base">${cur.code}</span>`;
         }
+
+        // Конвертер
         async function convertCurrency() {
             await loadRates();
             const from = document.getElementById('from-currency').value;
@@ -277,12 +281,14 @@
             const rate = convertAmount(1, from, to);
             document.getElementById('conversion-rate-info').innerHTML = `1 ${from} = ${rate.toFixed(4)} ${to}`;
         }
+
         function swapCurrencies() {
             const f = document.getElementById('from-currency');
             const t = document.getElementById('to-currency');
             const temp = f.value; f.value = t.value; t.value = temp;
             convertCurrency();
         }
+
         function populateConverterSelects() {
             const selects = ['from-currency', 'to-currency'];
             selects.forEach((id, i) => {
@@ -298,6 +304,8 @@
                 });
             });
         }
+
+        // Транзакции
         function renderRecentHistory() {
             const container = document.getElementById('recent-history');
             container.innerHTML = '';
@@ -328,6 +336,7 @@
                 container.appendChild(div);
             });
         }
+
         function renderFullHistory() {
             const container = document.getElementById('full-history');
             container.innerHTML = '';
@@ -357,6 +366,7 @@
                 container.appendChild(div);
             });
         }
+
         function deleteTransaction(id) {
             if (!confirm('Удалить операцию?')) return;
             DATA.transactions = DATA.transactions.filter(t => t.id !== id);
@@ -367,7 +377,9 @@
             renderAnalytics();
             showToast('Операция удалена');
         }
+
         let currentModalType = 'income';
+
         function showAddTransactionModal(type) {
             currentModalType = type;
             document.getElementById('add-modal').classList.remove('hidden');
@@ -391,8 +403,16 @@
             });
             renderModalCategories(type);
         }
-        function setModalType(type) { currentModalType = type; showAddTransactionModal(type); }
-        function hideAddTransactionModal() { document.getElementById('add-modal').classList.add('hidden'); }
+
+        function setModalType(type) {
+            currentModalType = type;
+            showAddTransactionModal(type);
+        }
+
+        function hideAddTransactionModal() {
+            document.getElementById('add-modal').classList.add('hidden');
+        }
+
         function renderModalCategories(type) {
             const select = document.getElementById('modal-category');
             select.innerHTML = '';
@@ -403,12 +423,14 @@
                 select.appendChild(opt);
             });
         }
+
         function saveTransaction() {
             const amount = parseFloat(document.getElementById('modal-amount').value);
             if (!amount || amount <= 0) return alert('Введите сумму > 0');
             const currency = document.getElementById('modal-currency').value;
             const categoryId = parseInt(document.getElementById('modal-category').value);
             const note = document.getElementById('modal-note').value.trim();
+
             DATA.transactions.push({
                 id: Date.now(),
                 type: currentModalType,
@@ -418,6 +440,7 @@
                 note: note,
                 date: new Date().toISOString()
             });
+
             saveData();
             hideAddTransactionModal();
             renderRecentHistory();
@@ -426,6 +449,7 @@
             renderAnalytics();
             showToast(currentModalType === 'income' ? 'Доход добавлен ✅' : 'Расход добавлен ✅');
         }
+
         function findCategoryById(id) {
             for (let type in DATA.categories) {
                 const found = DATA.categories[type].find(c => c.id === id);
@@ -433,6 +457,8 @@
             }
             return null;
         }
+
+        // Категории
         function renderCategories() {
             ['income','expense'].forEach(type => {
                 const container = document.getElementById(type + '-categories');
@@ -445,6 +471,7 @@
                 });
             });
         }
+
         function addCategory(type) {
             const name = prompt(`Название новой категории (${type === 'income' ? 'доход' : 'расход'})?`);
             if (!name?.trim()) return;
@@ -453,6 +480,7 @@
             renderCategories();
             showToast('Категория добавлена');
         }
+
         function deleteCategory(id, type) {
             if (!confirm('Удалить категорию?')) return;
             DATA.categories[type] = DATA.categories[type].filter(c => c.id !== id);
@@ -460,7 +488,9 @@
             renderCategories();
             showToast('Категория удалена');
         }
+
         let chartInstance = null;
+
         async function renderAnalytics() {
             await loadRates();
             let income = 0, expense = 0;
@@ -477,13 +507,17 @@
                     catMap[name] = (catMap[name] || 0) + val;
                 }
             });
+
             document.getElementById('total-income').textContent = income.toLocaleString('ru-RU') + ' ' + BASE_CURRENCY;
             document.getElementById('total-expense').textContent = expense.toLocaleString('ru-RU') + ' ' + BASE_CURRENCY;
+
             const ctx = document.getElementById('pie-chart');
             if (chartInstance) chartInstance.destroy();
+
             const labels = Object.keys(catMap);
             const values = Object.values(catMap);
             const totalExpense = values.reduce((a,b)=>a+b,0) || 1;
+
             if (labels.length) {
                 chartInstance = new Chart(ctx, {
                     type: 'doughnut',
@@ -502,12 +536,14 @@
                     }
                 });
             }
+
             const percentContainer = document.getElementById('percent-list');
             percentContainer.innerHTML = '';
             if (labels.length === 0) {
                 percentContainer.innerHTML = `<div class="text-center text-gray-400 py-4 text-sm">Нет расходов за этот месяц</div>`;
                 return;
             }
+
             const sorted = Object.entries(catMap).sort((a,b) => b[1] - a[1]);
             sorted.forEach(([name, val]) => {
                 const percent = ((val / totalExpense) * 100).toFixed(1);
@@ -523,6 +559,8 @@
                 percentContainer.appendChild(div);
             });
         }
+
+        // Навигация
         function switchPage(page) {
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
             if (page === 1) document.getElementById('page-home').classList.remove('hidden');
@@ -534,11 +572,13 @@
                 convertCurrency();
             }
             if (page === 5) { document.getElementById('page-analytics').classList.remove('hidden'); renderAnalytics(); }
+
             document.querySelectorAll('.nav-item').forEach((item, i) => {
                 item.classList.toggle('text-emerald-600', i+1 === page);
                 item.classList.toggle('text-gray-500', i+1 !== page);
             });
         }
+
         function toggleBaseCurrency() {
             let idx = CURRENCIES.findIndex(c => c.code === BASE_CURRENCY);
             BASE_CURRENCY = CURRENCIES[(idx + 1) % CURRENCIES.length].code;
@@ -550,44 +590,83 @@
             renderAnalytics();
             showToast(`База: ${BASE_CURRENCY}`);
         }
+
         function updateCurrentBaseDisplay() {
             const c = CURRENCIES.find(cur => cur.code === BASE_CURRENCY);
             document.getElementById('current-base-currency').innerHTML = `${c.symbol} <span class="text-xs">${c.code}</span>`;
         }
+
         function getStorageKey() { return `finance_data_${TELEGRAM_USER_ID}`; }
+
         function loadData() {
             const saved = localStorage.getItem(getStorageKey());
-            if (saved) DATA = JSON.parse(saved);
-            if (DATA.baseCurrency) BASE_CURRENCY = DATA.baseCurrency;
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                DATA = parsed;
+                if (parsed.baseCurrency) BASE_CURRENCY = parsed.baseCurrency;
+            }
             updateCurrentBaseDisplay();
         }
+
         function saveData() {
             DATA.baseCurrency = BASE_CURRENCY;
             localStorage.setItem(getStorageKey(), JSON.stringify(DATA));
         }
+
         function showToast(text) {
             const t = document.getElementById('toast');
             document.getElementById('toast-text').textContent = text;
             t.classList.remove('hidden');
             setTimeout(() => t.classList.add('hidden'), 2800);
         }
+
+        // === РАБОТА С ТЕМОЙ TELEGRAM ===
+        function applyTelegramTheme() {
+            const tg = window.Telegram?.WebApp;
+            if (!tg) return;
+
+            const theme = tg.themeParams;
+
+            // Применяем тёмную тему
+            if (theme.bg_color && theme.bg_color.toLowerCase() !== '#ffffff' && theme.bg_color.toLowerCase() !== '#f6f6f6') {
+                document.body.classList.add('dark');
+            } else {
+                document.body.classList.remove('dark');
+            }
+
+            // Цвет хедера
+            const header = document.getElementById('header');
+            if (header && theme.accent_color) {
+                header.style.background = `linear-gradient(to right, ${theme.accent_color}, #14b8a6)`;
+            }
+        }
+
         async function initApp() {
             const tg = window.Telegram?.WebApp;
             if (tg) {
-                tg.expand(); tg.ready(); tg.setHeaderColor('#10b981');
+                tg.expand();
+                tg.ready();
+                tg.setHeaderColor('secondary_bg_color');
+
                 if (tg.initDataUnsafe?.user) {
                     TELEGRAM_USER_ID = tg.initDataUnsafe.user.id.toString();
                     document.getElementById('user-name').textContent = tg.initDataUnsafe.user.first_name || 'Пользователь';
                 }
+
+                tg.onEvent('themeChanged', applyTelegramTheme);
             }
+
             loadData();
             await loadRates();
             await renderBalance();
             renderRecentHistory();
+            applyTelegramTheme();
             switchPage(1);
-            showToast('Обновлено! Шрифты уменьшены, аналитика улучшена');
-            console.log('🚀 Мини-апп обновлён');
+
+            showToast('Приложение обновлено • Тема Telegram подключена');
+            console.log('🚀 Финансы Mini App v2 — готов к дальнейшим улучшениям');
         }
+
         window.onload = initApp;
     </script>
 </body>
