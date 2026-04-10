@@ -252,6 +252,23 @@
             CZK: 0.04807
         };
 
+        // ==================== МНОГО РАЗНЫХ ЦВЕТОВ (15+ ярких) ====================
+        const COLOR_PALETTE = [
+            '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e',
+            '#14b8a6', '#f59e0b', '#6366f1', '#eab308', '#22c55e',
+            '#06b6d4', '#ef4444', '#c026d3', '#0ea5e9', '#84cc16',
+            '#db2777', '#64748b', '#8b5cf6', '#f97316', '#a78bfa'
+        ];
+
+        function getCategoryColor(name) {
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const index = Math.abs(hash) % COLOR_PALETTE.length;
+            return COLOR_PALETTE[index];
+        }
+
         async function loadRates() {
             try {
                 const res = await fetch('https://api.exchangerate.host/latest?base=USD');
@@ -287,34 +304,6 @@
             const cur = CURRENCIES.find(c => c.code === BASE_CURRENCY);
             document.getElementById('balance-amount').textContent = balance.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             document.getElementById('balance-currency').innerHTML = `${cur.symbol} <span class="text-base">${cur.code}</span>`;
-        }
-
-        // ==================== БОЛЬШЕ КРАСИВЫХ ЦВЕТОВ ====================
-        const CATEGORY_COLORS = {
-            'Еда': '#10b981',
-            'Транспорт': '#3b82f6',
-            'Жильё': '#8b5cf6',
-            'Развлечения': '#ec4899',
-            'Здоровье': '#f43f5e',
-            'Другое': '#64748b',
-            // Дополнительные цвета на случай новых категорий
-            'Супермаркет': '#14b8a6',
-            'Кафе и рестораны': '#f59e0b',
-            'Одежда': '#db2777',
-            'Техника': '#6366f1',
-            'Коммуналка': '#0ea5e9',
-            'Топливо': '#ef4444',
-            'Обучение': '#8b5cf6',
-            'Спорт': '#22c55e',
-            'Подарки': '#eab308',
-            'Транспорт2': '#06b6d4',
-            'Медицина': '#e11d48',
-            'Косметика': '#c026d3',
-            'Путешествия': '#0f766e'
-        };
-
-        function getCategoryColor(name) {
-            return CATEGORY_COLORS[name] || '#64748b'; // fallback — красивый серый
         }
 
         async function convertCurrency() {
@@ -515,6 +504,7 @@
             DATA.categories[type].push({id: Date.now(), name: name.trim()});
             saveData();
             renderCategories();
+            renderAnalytics(); // обновляем аналитику сразу
             showToast('Категория добавлена');
         }
         function deleteCategory(id, type) {
@@ -522,6 +512,7 @@
             DATA.categories[type] = DATA.categories[type].filter(c => c.id !== id);
             saveData();
             renderCategories();
+            renderAnalytics();
             showToast('Категория удалена');
         }
 
@@ -697,7 +688,7 @@
             switchPage(1);
             populateConverterSelects();
             convertCurrency();
-            showToast('Много красивых цветов в диаграмме добавлено ✅');
+            showToast('Цвета категорий теперь динамические и яркие ✅');
         }
         window.onload = initApp;
     </script>
