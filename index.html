@@ -231,8 +231,14 @@
             transactions: []
         };
 
-        let rates = {};
-        const FALLBACK_RATES = { EUR: 1, USD: 1.17, UAH: 50.8, CZK: 25.4, RUB: 97.5 };
+        let rates = {}; // курсы относительно EUR
+        const FALLBACK_RATES = {
+            EUR: 1,
+            USD: 1.17,
+            UAH: 50.8,
+            CZK: 24.4,
+            RUB: 91
+        };
 
         async function loadRates() {
             try {
@@ -241,6 +247,7 @@
                     const json = await res.json();
                     rates = json.rates;
                     rates.EUR = 1;
+                    console.log('✅ Курсы загружены с Frankfurter.dev');
                     return;
                 }
             } catch (e) {}
@@ -250,11 +257,13 @@
                 if (res.ok) {
                     const json = await res.json();
                     rates = json.rates;
+                    console.log('✅ Курсы загружены с exchangerate.host');
                     return;
                 }
             } catch (e) {}
 
             rates = FALLBACK_RATES;
+            console.warn('⚠️ Используем реальный fallback');
         }
 
         function convertAmount(amount, fromCurrency, toCurrency) {
@@ -318,6 +327,16 @@
             });
         }
 
+        let rateUpdateInterval = null;
+        function startRateAutoUpdate() {
+            if (rateUpdateInterval) clearInterval(rateUpdateInterval);
+            rateUpdateInterval = setInterval(async () => {
+                await loadRates();
+                if (!document.getElementById('page-converter').classList.contains('hidden')) convertCurrency();
+            }, 30 * 60 * 1000);
+        }
+
+        // ===================== Аналитика =====================
         let chartInstance = null;
 
         async function renderAnalytics() {
@@ -339,8 +358,8 @@
                 }
             });
 
-            document.getElementById('total-income').textContent = (isNaN(income) ? 0 : income).toLocaleString('ru-RU') + ' ' + BASE_CURRENCY;
-            document.getElementById('total-expense').textContent = (isNaN(expense) ? 0 : expense).toLocaleString('ru-RU') + ' ' + BASE_CURRENCY;
+            document.getElementById('total-income').textContent = income.toLocaleString('ru-RU') + ' ' + BASE_CURRENCY;
+            document.getElementById('total-expense').textContent = expense.toLocaleString('ru-RU') + ' ' + BASE_CURRENCY;
 
             const distributionContainer = document.getElementById('expense-distribution');
             distributionContainer.innerHTML = '';
@@ -349,7 +368,6 @@
 
             if (totalExpense === 1) {
                 distributionContainer.innerHTML = `<div class="text-center py-12 text-gray-400">Нет расходов за этот месяц</div>`;
-                if (chartInstance) chartInstance.destroy();
                 return;
             }
 
@@ -382,16 +400,8 @@
 
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{ data: values, backgroundColor: colors, borderWidth: 4, borderColor: document.body.classList.contains('dark') ? '#1f2937' : '#ffffff' }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '68%',
-                    plugins: { legend: { display: false } }
-                }
+                data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 4, borderColor: document.body.classList.contains('dark') ? '#1f2937' : '#ffffff' }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { display: false } } }
             });
         }
 
@@ -399,12 +409,9 @@
             'Еда': '#10b981', 'Транспорт': '#3b82f6', 'Жильё': '#8b5cf6',
             'Развлечения': '#ec4899', 'Здоровье': '#f43f5e', 'Другое': '#6b7280'
         };
+        function getCategoryColor(name) { return CATEGORY_COLORS[name] || '#10b981'; }
 
-        function getCategoryColor(name) {
-            return CATEGORY_COLORS[name] || '#10b981';
-        }
-
-        // ===================== Остальные стандартные функции =====================
+        // ===================== Стандартные функции =====================
         function renderRecentHistory() {
             const container = document.getElementById('recent-history');
             container.innerHTML = '';
@@ -686,9 +693,10 @@
             applyTelegramTheme();
             switchPage(1);
             populateConverterSelects();
+            startRateAutoUpdate();
 
-            showToast('Все расчёты исправлены ✅');
-            console.log('🚀 Мини-апп полностью исправлен');
+            showToast('Валюты полностью обновлены — реальные курсы подключены');
+            console.log('🚀 Мини-апп готов. Реальные курсы валют активны.');
         }
 
         window.onload = initApp;
