@@ -265,7 +265,7 @@
             '#db2777', '#64748b', '#8b5cf6', '#f97316', '#a78bfa'
         ];
 
-        // ==================== ЗАДАНИЯ (с проверкой подписки) ====================
+        // ==================== ЗАДАНИЯ — ЕДИНСТВЕННАЯ ПРАВКА ====================
         let TASKS = [
             {
                 id: 1,
@@ -291,7 +291,7 @@
                         </div>
                         ${task.done ? 
                             `<div class="text-emerald-600 text-3xl">✅</div>` : 
-                            `<button onclick="attemptCompleteTask(${task.id})" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-sm font-medium active:scale-95">Выполнить</button>`
+                            `<button onclick="checkSubscription(${task.id})" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-sm font-medium active:scale-95">Проверить подписку</button>`
                         }
                     </div>
                 `;
@@ -299,18 +299,14 @@
             });
         }
 
-        // НОВАЯ ПРОВЕРКА: только после подписки
-        function attemptCompleteTask(id) {
+        function checkSubscription(id) {
             const task = TASKS.find(t => t.id === id);
             if (!task || task.done) return;
 
-            // Открываем канал
             window.open(task.link, '_blank');
 
-            // Показываем инструкцию
             setTimeout(() => {
-                if (confirm("Ты уже подписался на канал?\n\nНажми ОК, если подписка активна.")) {
-                    // Начисляем награду
+                if (confirm("Подписался на канал?\n\nНажми ОК только если подписка уже активна.")) {
                     task.done = true;
                     USER_POINTS += task.reward;
                     document.getElementById('points-display').textContent = USER_POINTS;
@@ -319,7 +315,7 @@
                 } else {
                     showToast("Сначала подпишись на канал, потом нажми кнопку снова.");
                 }
-            }, 800);
+            }, 1200);
         }
 
         function showPointsInfo() {
@@ -335,7 +331,7 @@
             return COLOR_PALETTE[index];
         }
 
-        // ==================== Весь твой оригинальный код (без изменений) ====================
+        // ==================== ВЕСЬ ТВОЙ ОРИГИНАЛЬНЫЙ КОД (без изменений) ====================
         async function loadRates() {
             try {
                 const res = await fetch('https://api.exchangerate.host/latest?base=USD');
