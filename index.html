@@ -170,18 +170,27 @@
                 </div>
             </div>
         </div>
+
+        <!-- НОВАЯ СТРАНИЦА: ПАНЕЛЬ ЗАДАНИЙ -->
+        <div id="page-tasks" class="section hidden">
+            <h2 class="font-semibold text-2xl mb-6">Задания</h2>
+            <div id="tasks-list" class="space-y-4"></div>
+        </div>
     </div>
-    <!-- BOTTOM NAV -->
+
+    <!-- BOTTOM NAV (добавлена одна новая кнопка) -->
     <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 bottom-nav">
-        <div class="max-w-xl mx-auto grid grid-cols-5 text-xs font-medium">
+        <div class="max-w-xl mx-auto grid grid-cols-6 text-xs font-medium">
             <div onclick="switchPage(1)" class="nav-item flex flex-col items-center py-3 text-emerald-600">🏠<br>Главная</div>
             <div onclick="switchPage(2)" class="nav-item flex flex-col items-center py-3 text-gray-500">📜<br>История</div>
             <div onclick="switchPage(3)" class="nav-item flex flex-col items-center py-3 text-gray-500">📂<br>Категории</div>
             <div onclick="switchPage(4)" class="nav-item flex flex-col items-center py-3 text-gray-500">🔄<br>Конвертер</div>
             <div onclick="switchPage(5)" class="nav-item flex flex-col items-center py-3 text-gray-500">📊<br>Аналитика</div>
+            <div onclick="switchPage('tasks')" class="nav-item flex flex-col items-center py-3 text-gray-500">✅<br>Задания</div>
         </div>
     </div>
-    <!-- MODAL -->
+
+    <!-- MODAL (остаётся без изменений) -->
     <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" id="add-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <h2 id="modal-title" class="text-2xl font-semibold mb-6">Новая операция</h2>
@@ -221,10 +230,11 @@
     <div id="toast" onclick="this.classList.add('hidden')" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-emerald-700 text-white px-6 py-3 rounded-3xl shadow-2xl text-sm z-50">
         <span id="toast-text"></span>
     </div>
+
     <script>
         let TELEGRAM_USER_ID = 'demo';
         let BASE_CURRENCY = 'USD';
-        let USER_POINTS = 1250;   // ← Добавлено: поинты
+        let USER_POINTS = 1250;
 
         const CURRENCIES = [
             { code: 'CZK', name: 'Крона', symbol: 'Kč' },
@@ -254,6 +264,58 @@
             '#06b6d4', '#ef4444', '#c026d3', '#0ea5e9', '#84cc16',
             '#db2777', '#64748b', '#8b5cf6', '#f97316', '#a78bfa'
         ];
+
+        // ==================== ЗАДАНИЯ ====================
+        let TASKS = [
+            {
+                id: 1,
+                text: "Подписаться на канал",
+                link: "https://t.me/cryptodropstokkii",
+                reward: 150,
+                done: false
+            }
+        ];
+
+        function renderTasks() {
+            const container = document.getElementById('tasks-list');
+            container.innerHTML = '';
+            TASKS.forEach(task => {
+                const div = document.createElement('div');
+                div.className = `bg-white dark:bg-gray-900 p-5 rounded-3xl shadow-sm ${task.done ? 'opacity-75' : ''}`;
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="font-medium text-lg">${task.text}</div>
+                            <a href="${task.link}" target="_blank" class="text-emerald-600 text-sm underline">Открыть канал →</a>
+                            <div class="mt-2 text-emerald-600 font-bold">+${task.reward} ⭐</div>
+                        </div>
+                        ${task.done ? 
+                            `<div class="text-emerald-600 text-3xl">✅</div>` : 
+                            `<button onclick="completeTask(${task.id})" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-sm font-medium active:scale-95">Выполнить</button>`
+                        }
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function completeTask(id) {
+            const task = TASKS.find(t => t.id === id);
+            if (!task || task.done) return;
+
+            if (confirm(`Выполнить задание и получить +${task.reward} поинтов?`)) {
+                task.done = true;
+                USER_POINTS += task.reward;
+                document.getElementById('points-display').textContent = USER_POINTS;
+                renderTasks();
+                showToast(`+${task.reward} поинтов за задание! ✅`);
+            }
+        }
+
+        function showPointsInfo() {
+            alert(`У вас ${USER_POINTS} поинтов ⭐`);
+        }
+
         function getCategoryColor(name) {
             let hash = 0;
             for (let i = 0; i < name.length; i++) {
@@ -262,6 +324,8 @@
             const index = Math.abs(hash) % COLOR_PALETTE.length;
             return COLOR_PALETTE[index];
         }
+
+        // ==================== Весь твой оригинальный код ниже (без изменений) ====================
         async function loadRates() {
             try {
                 const res = await fetch('https://api.exchangerate.host/latest?base=USD');
@@ -582,9 +646,14 @@
                 document.getElementById('page-analytics').classList.remove('hidden');
                 renderAnalytics();
             }
+            if (page === 'tasks') {
+                document.getElementById('page-tasks').classList.remove('hidden');
+                renderTasks();
+            }
             document.querySelectorAll('.nav-item').forEach((item, i) => {
-                item.classList.toggle('text-emerald-600', i+1 === page);
-                item.classList.toggle('text-gray-500', i+1 !== page);
+                const isActive = (page === 'tasks' && i === 5) || (typeof page === 'number' && i+1 === page);
+                item.classList.toggle('text-emerald-600', isActive);
+                item.classList.toggle('text-gray-500', !isActive);
             });
         }
         function toggleBaseCurrency() {
@@ -636,12 +705,6 @@
                 header.style.background = `linear-gradient(to right, ${theme.accent_color}, #14b8a6)`;
             }
         }
-
-        // === ОДНА ЕДИНСТВЕННАЯ НОВАЯ ФУНКЦИЯ ===
-        function showPointsInfo() {
-            alert(`У вас ${USER_POINTS} поинтов ⭐\n\nСкоро здесь будет панель заданий и магазин скинов!`);
-        }
-
         async function initApp() {
             const tg = window.Telegram?.WebApp;
             if (tg) {
@@ -652,7 +715,6 @@
                     TELEGRAM_USER_ID = tg.initDataUnsafe.user.id.toString();
                     document.getElementById('user-name').textContent = tg.initDataUnsafe.user.first_name || 'Пользователь';
 
-                    // Обновляем аватарку
                     const avatarDiv = document.getElementById('user-avatar');
                     if (tg.initDataUnsafe.user.photo_url) {
                         avatarDiv.innerHTML = `<img src="${tg.initDataUnsafe.user.photo_url}" class="w-full h-full object-cover rounded-2xl">`;
