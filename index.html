@@ -127,7 +127,7 @@
             </div>
         </div>
 
-        <!-- PAGE 4: КОНВЕРТЕР (исправленный) -->
+        <!-- PAGE 4: КОНВЕРТЕР -->
         <div id="page-converter" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Конвертер валют</h2>
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl">
@@ -149,7 +149,6 @@
         <!-- PAGE 5: АНАЛИТИКА -->
         <div id="page-analytics" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Аналитика</h2>
-           
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <div class="analytics-card bg-white dark:bg-gray-900 rounded-3xl p-6">
                     <div class="text-sm text-gray-400">Доходы за месяц</div>
@@ -160,12 +159,10 @@
                     <div id="total-expense" class="analytics-number text-rose-600 mt-1">0</div>
                 </div>
             </div>
-           
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 mb-6">
                 <h3 class="font-medium mb-5">Распределение расходов</h3>
                 <div id="expense-distribution" class="space-y-5"></div>
             </div>
-
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6">
                 <h3 class="font-medium mb-4">Круговая диаграмма</h3>
                 <div class="flex justify-center">
@@ -247,67 +244,72 @@
             transactions: []
         };
 
-        let ratesToUSD = {};
-        const FALLBACK_RATES = { 
-            USD: 1, 
-            EUR: 0.855, 
-            CZK: 0.043, 
-            UAH: 0.024, 
-            RUB: 0.0105 
-        };
+        let rates = {}; // Теперь храним rates относительно EUR (Frankfurter)
+        let lastRatesUpdate = null;
 
-        let rateUpdateInterval = null;
+        const FALLBACK_RATES = {
+            USD: 1.17,   // 1 EUR = 1.17 USD
+            EUR: 1,
+            CZK: 25.5,
+            UAH: 41.5,
+            RUB: 97
+        };
 
         async function loadRates() {
             try {
-                const res = await fetch('https://api.exchangerate.host/latest?base=USD');
+                // Основной источник — Frankfurter (очень точный)
+                const res = await fetch('https://api.frankfurter.dev/v1/latest?from=EUR');
                 if (res.ok) {
                     const json = await res.json();
-                    ratesToUSD = json.rates;
+                    rates = json.rates;
+                    rates.EUR = 1; // добавляем EUR
+                    lastRatesUpdate = Date.now();
                     updateLastUpdateTime();
-                    console.log('✅ Курсы валют успешно обновлены');
+                    console.log('✅ Курсы загружены с Frankfurter.dev');
                     return true;
                 }
             } catch(e) {}
-            ratesToUSD = FALLBACK_RATES;
+
+            // Fallback на exchangerate.host
+            try {
+                const res = await fetch('https://api.exchangerate.host/latest?base=EUR');
+                if (res.ok) {
+                    const json = await res.json();
+                    rates = json.rates;
+                    lastRatesUpdate = Date.now();
+                    updateLastUpdateTime();
+                    console.log('✅ Курсы загружены с exchangerate.host');
+                    return true;
+                }
+            } catch(e) {}
+
+            // Если всё упало — используем статичный fallback
+            rates = FALLBACK_RATES;
+            lastRatesUpdate = Date.now();
             updateLastUpdateTime();
-            console.warn('Используем fallback курсы');
+            console.warn('⚠️ Используем fallback курсы (1 EUR ≈ 1.17 USD)');
             return false;
         }
 
         function updateLastUpdateTime() {
             const el = document.getElementById('last-update');
             if (el) {
-                const now = new Date();
-                el.textContent = `Обновлено: ${now.toLocaleTimeString('ru-RU')}`;
+                const date = new Date(lastRatesUpdate || Date.now());
+                el.textContent = `Обновлено: ${date.toLocaleTimeString('ru-RU')}`;
             }
         }
 
         function convertAmount(amount, fromCurrency, toCurrency) {
             if (fromCurrency === toCurrency) return amount;
-            const rates = ratesToUSD || FALLBACK_RATES;
-            const inUSD = amount * (rates[fromCurrency] || 1);
-            return toCurrency === 'USD' ? inUSD : inUSD / (rates[toCurrency] || 1);
+            const r = rates || FALLBACK_RATES;
+            
+            const fromRate = r[fromCurrency] || 1;
+            const toRate = r[toCurrency] || 1;
+            
+            // Конвертируем через EUR
+            return (amount / fromRate) * toRate;
         }
 
-        async function calculateBalance() {
-            await loadRates();
-            let total = 0;
-            DATA.transactions.forEach(tx => {
-                const inBase = convertAmount(tx.amount, tx.currency, BASE_CURRENCY);
-                total += tx.type === 'income' ? inBase : -inBase;
-            });
-            return total;
-        }
-
-        async function renderBalance() {
-            const balance = await calculateBalance();
-            const cur = CURRENCIES.find(c => c.code === BASE_CURRENCY);
-            document.getElementById('balance-amount').textContent = balance.toLocaleString('ru-RU');
-            document.getElementById('balance-currency').innerHTML = `${cur.symbol} <span class="text-base">${cur.code}</span>`;
-        }
-
-        // Исправленный конвертер
         async function convertCurrency() {
             await loadRates();
             const from = document.getElementById('from-currency').value;
@@ -347,7 +349,8 @@
             });
         }
 
-        // Автообновление курсов каждые 30 минут
+        // Автообновление каждые 30 минут
+        let rateUpdateInterval = null;
         function startRateAutoUpdate() {
             if (rateUpdateInterval) clearInterval(rateUpdateInterval);
             rateUpdateInterval = setInterval(async () => {
@@ -355,24 +358,29 @@
                 if (!document.getElementById('page-converter').classList.contains('hidden')) {
                     convertCurrency();
                 }
-            }, 30 * 60 * 1000); // 30 минут
+            }, 30 * 60 * 1000);
         }
 
-        // === ЕДИНАЯ СИСТЕМА ЦВЕТОВ ===
-        const CATEGORY_COLORS = {
-            'Еда': '#10b981',
-            'Транспорт': '#3b82f6',
-            'Жильё': '#8b5cf6',
-            'Развлечения': '#ec4899',
-            'Здоровье': '#f43f5e',
-            'Другое': '#6b7280'
-        };
+        // ==================== Остальной код без изменений ====================
+        // (renderBalance, renderRecentHistory, renderFullHistory, renderAnalytics и т.д.)
 
-        function getCategoryColor(name) {
-            return CATEGORY_COLORS[name] || '#10b981';
+        async function calculateBalance() {
+            await loadRates();
+            let total = 0;
+            DATA.transactions.forEach(tx => {
+                const inBase = convertAmount(tx.amount, tx.currency, BASE_CURRENCY);
+                total += tx.type === 'income' ? inBase : -inBase;
+            });
+            return total;
         }
 
-        // Остальные функции (без изменений, сокращённо для экономии места)
+        async function renderBalance() {
+            const balance = await calculateBalance();
+            const cur = CURRENCIES.find(c => c.code === BASE_CURRENCY);
+            document.getElementById('balance-amount').textContent = balance.toLocaleString('ru-RU');
+            document.getElementById('balance-currency').innerHTML = `${cur.symbol} <span class="text-base">${cur.code}</span>`;
+        }
+
         function renderRecentHistory() {
             const container = document.getElementById('recent-history');
             container.innerHTML = '';
@@ -559,6 +567,19 @@
 
         let chartInstance = null;
 
+        const CATEGORY_COLORS = {
+            'Еда': '#10b981',
+            'Транспорт': '#3b82f6',
+            'Жильё': '#8b5cf6',
+            'Развлечения': '#ec4899',
+            'Здоровье': '#f43f5e',
+            'Другое': '#6b7280'
+        };
+
+        function getCategoryColor(name) {
+            return CATEGORY_COLORS[name] || '#10b981';
+        }
+
         async function renderAnalytics() {
             await loadRates();
             let income = 0, expense = 0;
@@ -743,10 +764,10 @@
             applyTelegramTheme();
             switchPage(1);
 
-            startRateAutoUpdate();   // Запускаем автообновление курсов
+            startRateAutoUpdate();
 
-            showToast('Конвертер валют исправлен + автообновление каждые 30 мин');
-            console.log('🚀 Финансы Mini App — конвертер полностью исправлен');
+            showToast('Конвертер теперь использует точные курсы (1 EUR ≈ 1.17 USD)');
+            console.log('🚀 Конвертер привязан к Frankfurter.dev — курсы должны быть точными');
         }
 
         window.onload = initApp;
