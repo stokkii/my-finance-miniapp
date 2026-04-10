@@ -9,7 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-        body { font-family: 'Inter', system-ui, sans-serif; transition: background-color 0.3s ease; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            transition: background-color 0.3s ease;
+        }
         .section { animation: fadeIn 0.3s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .bottom-nav { box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); }
@@ -33,9 +36,20 @@
       
         #balance-amount { font-size: 2.4rem; line-height: 2.6rem; font-weight: 600; }
         .analytics-number { font-size: 2.1rem; line-height: 2.3rem; font-weight: 600; }
-        .progress-bar { height: 8px; background: #e5e7eb; border-radius: 9999px; overflow: hidden; }
-        .dark .progress-bar { background: #374151; }
-        .progress-fill { height: 100%; border-radius: 9999px; transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        .dark .progress-bar {
+            background: #374151;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-950 text-black dark:text-white min-h-screen pb-20 transition-colors duration-300">
@@ -53,7 +67,6 @@
             <span class="text-xs">▼</span>
         </div>
     </div>
-
     <div id="main-content" class="p-6 pb-24 max-w-xl mx-auto">
         <!-- PAGE 1: ГЛАВНАЯ -->
         <div id="page-home" class="section">
@@ -122,7 +135,7 @@
                     <select id="to-currency" onchange="convertCurrency()" class="bg-transparent text-3xl font-semibold focus:outline-none"></select>
                 </div>
                 <div class="flex items-center justify-center mb-8">
-                    <input id="from-amount" type="text" value="100" oninput="convertCurrency()"
+                    <input id="from-amount" type="text" value="1" oninput="convertCurrency()"
                            class="text-6xl font-semibold bg-transparent text-center w-48 focus:outline-none">
                 </div>
                 <div id="to-amount-display" class="text-6xl font-semibold text-center text-gray-400 mb-8">0.00</div>
@@ -143,6 +156,7 @@
                     <div id="total-expense" class="analytics-number text-rose-600 mt-1">0</div>
                 </div>
             </div>
+          
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 mb-6">
                 <h3 class="font-medium mb-5">Распределение расходов</h3>
                 <div id="expense-distribution" class="space-y-5"></div>
@@ -167,7 +181,7 @@
         </div>
     </div>
 
-    <!-- MODAL и TOAST (без изменений) -->
+    <!-- MODAL -->
     <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" id="add-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <h2 id="modal-title" class="text-2xl font-semibold mb-6">Новая операция</h2>
@@ -204,6 +218,7 @@
             </div>
         </div>
     </div>
+
     <div id="toast" onclick="this.classList.add('hidden')" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-emerald-700 text-white px-6 py-3 rounded-3xl shadow-2xl text-sm z-50">
         <span id="toast-text"></span>
     </div>
@@ -229,13 +244,12 @@
 
         let ratesToUSD = {};
 
-        // АКТУАЛЬНЫЕ КУРСЫ НА 10 АПРЕЛЯ 2026 (точно до копеек)
         const FALLBACK_RATES = {
-            USD: 1.0000,
-            EUR: 1.1685,   // 1 EUR ≈ 1.1685 USD
-            CZK: 0.04807,  // 1 CZK ≈ 0.04807 USD
-            UAH: 0.02302,  // 1 UAH ≈ 0.02302 USD  → 1 USD ≈ 43.44 UAH
-            RUB: 0.01285   // 1 RUB ≈ 0.01285 USD
+            USD: 1.00000,
+            EUR: 1.16850,
+            UAH: 0.02302,
+            RUB: 0.01285,
+            CZK: 0.04807
         };
 
         async function loadRates() {
@@ -244,12 +258,9 @@
                 if (res.ok) {
                     const json = await res.json();
                     ratesToUSD = json.rates;
-                    console.log('✅ Курсы загружены с API');
                     return;
                 }
-            } catch(e) {
-                console.warn('API недоступен → используем точные fallback');
-            }
+            } catch(e) {}
             ratesToUSD = FALLBACK_RATES;
         }
 
@@ -278,26 +289,36 @@
             document.getElementById('balance-currency').innerHTML = `${cur.symbol} <span class="text-base">${cur.code}</span>`;
         }
 
+        // ==================== УЛУЧШЕННЫЕ ЦВЕТА ДЛЯ КАТЕГОРИЙ ====================
+        const CATEGORY_COLORS = {
+            'Еда': '#10b981',        // emerald
+            'Транспорт': '#3b82f6',   // blue
+            'Жильё': '#8b5cf6',       // violet
+            'Развлечения': '#ec4899', // pink
+            'Здоровье': '#f43f5e',    // rose
+            'Другое': '#64748b'       // slate (более приятный серый)
+        };
+
+        function getCategoryColor(name) {
+            return CATEGORY_COLORS[name] || '#64748b';
+        }
+
         async function convertCurrency() {
             await loadRates();
             const from = document.getElementById('from-currency').value;
             const to = document.getElementById('to-currency').value;
             let amount = parseFloat(document.getElementById('from-amount').value) || 0;
-
             const result = convertAmount(amount, from, to);
             document.getElementById('to-amount-display').textContent = result.toFixed(2);
-
+           
             const rate = convertAmount(1, from, to);
-            document.getElementById('conversion-rate-info').innerHTML = 
-                `1 ${from} = ${rate.toFixed(4)} ${to}`;
+            document.getElementById('conversion-rate-info').innerHTML = `1 ${from} = ${rate.toFixed(4)} ${to}`;
         }
 
         function swapCurrencies() {
             const f = document.getElementById('from-currency');
             const t = document.getElementById('to-currency');
-            const temp = f.value;
-            f.value = t.value;
-            t.value = temp;
+            const temp = f.value; f.value = t.value; t.value = temp;
             convertCurrency();
         }
 
@@ -317,15 +338,8 @@
             });
         }
 
-        // === Остальной код без изменений (история, аналитика, категории, модал и т.д.) ===
-        const CATEGORY_COLORS = {
-            'Еда': '#10b981', 'Транспорт': '#3b82f6', 'Жильё': '#8b5cf6',
-            'Развлечения': '#ec4899', 'Здоровье': '#f43f5e', 'Другое': '#6b7280'
-        };
-
-        function getCategoryColor(name) { return CATEGORY_COLORS[name] || '#10b981'; }
-
-        function renderRecentHistory() { /* ... тот же код ... */ 
+        // ==================== Остальные функции без изменений ====================
+        function renderRecentHistory() {
             const container = document.getElementById('recent-history');
             container.innerHTML = '';
             const recent = [...DATA.transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,5);
@@ -356,7 +370,7 @@
             });
         }
 
-        function renderFullHistory() { /* аналогично, без изменений */ 
+        function renderFullHistory() {
             const container = document.getElementById('full-history');
             container.innerHTML = '';
             if (DATA.transactions.length === 0) {
@@ -398,7 +412,7 @@
         }
 
         let currentModalType = 'income';
-        function showAddTransactionModal(type) { /* без изменений */ 
+        function showAddTransactionModal(type) {
             currentModalType = type;
             document.getElementById('add-modal').classList.remove('hidden');
             document.getElementById('modal-title').textContent = type === 'income' ? 'Новый доход' : 'Новый расход';
@@ -423,9 +437,13 @@
             renderModalCategories(type);
         }
 
-        function setModalType(type) { currentModalType = type; showAddTransactionModal(type); }
-        function hideAddTransactionModal() { document.getElementById('add-modal').classList.add('hidden'); }
-
+        function setModalType(type) {
+            currentModalType = type;
+            showAddTransactionModal(type);
+        }
+        function hideAddTransactionModal() {
+            document.getElementById('add-modal').classList.add('hidden');
+        }
         function renderModalCategories(type) {
             const select = document.getElementById('modal-category');
             select.innerHTML = '';
@@ -436,7 +454,6 @@
                 select.appendChild(opt);
             });
         }
-
         function saveTransaction() {
             const amount = parseFloat(document.getElementById('modal-amount').value);
             if (!amount || amount <= 0) return alert('Введите сумму > 0');
@@ -460,7 +477,6 @@
             renderAnalytics();
             showToast(currentModalType === 'income' ? 'Доход добавлен ✅' : 'Расход добавлен ✅');
         }
-
         function findCategoryById(id) {
             for (let type in DATA.categories) {
                 const found = DATA.categories[type].find(c => c.id === id);
@@ -468,7 +484,6 @@
             }
             return null;
         }
-
         function renderCategories() {
             ['income','expense'].forEach(type => {
                 const container = document.getElementById(type + '-categories');
@@ -481,7 +496,6 @@
                 });
             });
         }
-
         function addCategory(type) {
             const name = prompt(`Название новой категории (${type === 'income' ? 'доход' : 'расход'})?`);
             if (!name?.trim()) return;
@@ -490,7 +504,6 @@
             renderCategories();
             showToast('Категория добавлена');
         }
-
         function deleteCategory(id, type) {
             if (!confirm('Удалить категорию?')) return;
             DATA.categories[type] = DATA.categories[type].filter(c => c.id !== id);
@@ -500,7 +513,7 @@
         }
 
         let chartInstance = null;
-        async function renderAnalytics() { /* без изменений в логике */ 
+        async function renderAnalytics() {
             await loadRates();
             let income = 0, expense = 0;
             const catMap = {};
@@ -516,21 +529,27 @@
                     catMap[name] = (catMap[name] || 0) + val;
                 }
             });
+
             document.getElementById('total-income').textContent = income.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + ' ' + BASE_CURRENCY;
             document.getElementById('total-expense').textContent = expense.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + ' ' + BASE_CURRENCY;
 
             const distributionContainer = document.getElementById('expense-distribution');
             distributionContainer.innerHTML = '';
             const totalExpense = Object.values(catMap).reduce((a, b) => a + b, 0);
+
             if (totalExpense === 0) {
                 distributionContainer.innerHTML = `<div class="text-center py-12"><div class="text-5xl mb-4">📊</div><div class="text-gray-400 text-lg">Нет расходов за этот месяц</div></div>`;
                 if (chartInstance) chartInstance.destroy();
                 return;
             }
+
             const sortedCategories = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+
+            // Прогресс-бары с индивидуальными цветами
             sortedCategories.forEach(([name, amount]) => {
                 const percent = ((amount / totalExpense) * 100).toFixed(1);
                 const color = getCategoryColor(name);
+               
                 const div = document.createElement('div');
                 div.className = "space-y-2";
                 div.innerHTML = `
@@ -548,15 +567,32 @@
                 distributionContainer.appendChild(div);
             });
 
+            // Круговая диаграмма с теми же цветами
             const ctx = document.getElementById('pie-chart');
             if (chartInstance) chartInstance.destroy();
             const labels = sortedCategories.map(([name]) => name);
             const values = sortedCategories.map(([, val]) => val);
             const backgroundColors = sortedCategories.map(([name]) => getCategoryColor(name));
+
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
-                data: { labels, datasets: [{ data: values, backgroundColor: backgroundColors, borderWidth: 4, borderColor: document.body.classList.contains('dark') ? '#1f2937' : '#ffffff' }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { display: false } } }
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 5,
+                        borderColor: document.body.classList.contains('dark') ? '#1f2937' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '68%',
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
             });
         }
 
@@ -570,8 +606,10 @@
                 if (!document.getElementById('from-currency').hasChildNodes()) populateConverterSelects();
                 convertCurrency();
             }
-            if (page === 5) { document.getElementById('page-analytics').classList.remove('hidden'); renderAnalytics(); }
-
+            if (page === 5) {
+                document.getElementById('page-analytics').classList.remove('hidden');
+                renderAnalytics();
+            }
             document.querySelectorAll('.nav-item').forEach((item, i) => {
                 item.classList.toggle('text-emerald-600', i+1 === page);
                 item.classList.toggle('text-gray-500', i+1 !== page);
@@ -615,7 +653,6 @@
             t.classList.remove('hidden');
             setTimeout(() => t.classList.add('hidden'), 2800);
         }
-
         function applyTelegramTheme() {
             const tg = window.Telegram?.WebApp;
             if (!tg) return;
@@ -634,7 +671,9 @@
         async function initApp() {
             const tg = window.Telegram?.WebApp;
             if (tg) {
-                tg.expand(); tg.ready(); tg.setHeaderColor('secondary_bg_color');
+                tg.expand();
+                tg.ready();
+                tg.setHeaderColor('secondary_bg_color');
                 if (tg.initDataUnsafe?.user) {
                     TELEGRAM_USER_ID = tg.initDataUnsafe.user.id.toString();
                     document.getElementById('user-name').textContent = tg.initDataUnsafe.user.first_name || 'Пользователь';
@@ -647,10 +686,10 @@
             renderRecentHistory();
             applyTelegramTheme();
             switchPage(1);
-            showToast('Валюты полностью исправлены ✅ Теперь точно!');
-            console.log('🚀 Финансы Mini App — валютные пары идеальны');
+            populateConverterSelects();
+            convertCurrency();
+            showToast('Цвета категорий обновлены ✅');
         }
-
         window.onload = initApp;
     </script>
 </body>
