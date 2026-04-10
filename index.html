@@ -289,18 +289,32 @@
             document.getElementById('balance-currency').innerHTML = `${cur.symbol} <span class="text-base">${cur.code}</span>`;
         }
 
-        // ==================== УЛУЧШЕННЫЕ ЦВЕТА ДЛЯ КАТЕГОРИЙ ====================
+        // ==================== БОЛЬШЕ КРАСИВЫХ ЦВЕТОВ ====================
         const CATEGORY_COLORS = {
-            'Еда': '#10b981',        // emerald
-            'Транспорт': '#3b82f6',   // blue
-            'Жильё': '#8b5cf6',       // violet
-            'Развлечения': '#ec4899', // pink
-            'Здоровье': '#f43f5e',    // rose
-            'Другое': '#64748b'       // slate (более приятный серый)
+            'Еда': '#10b981',
+            'Транспорт': '#3b82f6',
+            'Жильё': '#8b5cf6',
+            'Развлечения': '#ec4899',
+            'Здоровье': '#f43f5e',
+            'Другое': '#64748b',
+            // Дополнительные цвета на случай новых категорий
+            'Супермаркет': '#14b8a6',
+            'Кафе и рестораны': '#f59e0b',
+            'Одежда': '#db2777',
+            'Техника': '#6366f1',
+            'Коммуналка': '#0ea5e9',
+            'Топливо': '#ef4444',
+            'Обучение': '#8b5cf6',
+            'Спорт': '#22c55e',
+            'Подарки': '#eab308',
+            'Транспорт2': '#06b6d4',
+            'Медицина': '#e11d48',
+            'Косметика': '#c026d3',
+            'Путешествия': '#0f766e'
         };
 
         function getCategoryColor(name) {
-            return CATEGORY_COLORS[name] || '#64748b';
+            return CATEGORY_COLORS[name] || '#64748b'; // fallback — красивый серый
         }
 
         async function convertCurrency() {
@@ -310,7 +324,6 @@
             let amount = parseFloat(document.getElementById('from-amount').value) || 0;
             const result = convertAmount(amount, from, to);
             document.getElementById('to-amount-display').textContent = result.toFixed(2);
-           
             const rate = convertAmount(1, from, to);
             document.getElementById('conversion-rate-info').innerHTML = `1 ${from} = ${rate.toFixed(4)} ${to}`;
         }
@@ -338,7 +351,7 @@
             });
         }
 
-        // ==================== Остальные функции без изменений ====================
+        // ==================== Остальной код без изменений ====================
         function renderRecentHistory() {
             const container = document.getElementById('recent-history');
             container.innerHTML = '';
@@ -545,7 +558,6 @@
 
             const sortedCategories = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
 
-            // Прогресс-бары с индивидуальными цветами
             sortedCategories.forEach(([name, amount]) => {
                 const percent = ((amount / totalExpense) * 100).toFixed(1);
                 const color = getCategoryColor(name);
@@ -567,7 +579,6 @@
                 distributionContainer.appendChild(div);
             });
 
-            // Круговая диаграмма с теми же цветами
             const ctx = document.getElementById('pie-chart');
             if (chartInstance) chartInstance.destroy();
             const labels = sortedCategories.map(([name]) => name);
@@ -589,9 +600,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '68%',
-                    plugins: {
-                        legend: { display: false }
-                    }
+                    plugins: { legend: { display: false } }
                 }
             });
         }
@@ -688,7 +697,7 @@
             switchPage(1);
             populateConverterSelects();
             convertCurrency();
-            showToast('Цвета категорий обновлены ✅');
+            showToast('Много красивых цветов в диаграмме добавлено ✅');
         }
         window.onload = initApp;
     </script>
