@@ -21,7 +21,6 @@
         .modal { animation: modalPop 0.3s ease forwards; }
         @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
        
-        /* Уменьшение шрифтов */
         .text-5xl { font-size: 2.25rem; line-height: 2.5rem; }
         .text-6xl { font-size: 2.8rem; line-height: 3rem; }
         .text-4xl { font-size: 1.8rem; line-height: 2rem; }
@@ -38,7 +37,6 @@
         #balance-amount { font-size: 2.4rem; line-height: 2.6rem; font-weight: 600; }
         .analytics-number { font-size: 2.1rem; line-height: 2.3rem; font-weight: 600; }
 
-        /* Новые стили для прогресс-баров */
         .progress-bar {
             height: 8px;
             background: #e5e7eb;
@@ -147,7 +145,7 @@
             </div>
         </div>
 
-        <!-- PAGE 5: АНАЛИТИКА — УЛУЧШЕННАЯ -->
+        <!-- PAGE 5: АНАЛИТИКА -->
         <div id="page-analytics" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Аналитика</h2>
            
@@ -163,16 +161,13 @@
             </div>
            
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 mb-6">
-                <h3 class="font-medium mb-5 flex items-center gap-2">
-                    <span>Распределение расходов</span>
-                </h3>
+                <h3 class="font-medium mb-5">Распределение расходов</h3>
                 
                 <div id="expense-distribution" class="space-y-5">
                     <!-- Заполняется динамически -->
                 </div>
             </div>
 
-            <!-- График оставляем как запасной вариант -->
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6">
                 <h3 class="font-medium mb-4">Круговая диаграмма</h3>
                 <div class="flex justify-center">
@@ -193,7 +188,7 @@
         </div>
     </div>
 
-    <!-- MODAL (без изменений) -->
+    <!-- MODAL -->
     <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" id="add-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <h2 id="modal-title" class="text-2xl font-semibold mb-6">Новая операция</h2>
@@ -327,7 +322,7 @@
             });
         }
 
-        function renderRecentHistory() {
+        function renderRecentHistory() { /* без изменений */ 
             const container = document.getElementById('recent-history');
             container.innerHTML = '';
             const recent = [...DATA.transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,5);
@@ -358,7 +353,7 @@
             });
         }
 
-        function renderFullHistory() {
+        function renderFullHistory() { /* без изменений */ 
             const container = document.getElementById('full-history');
             container.innerHTML = '';
             if (DATA.transactions.length === 0) {
@@ -513,6 +508,20 @@
 
         let chartInstance = null;
 
+        // === ФИКС ЦВЕТОВ: ЕДИНАЯ СИСТЕМА ЦВЕТОВ ===
+        const CATEGORY_COLORS = {
+            'Еда': '#10b981',
+            'Транспорт': '#3b82f6',
+            'Жильё': '#8b5cf6',
+            'Развлечения': '#ec4899',
+            'Здоровье': '#f43f5e',
+            'Другое': '#6b7280'
+        };
+
+        function getCategoryColor(name) {
+            return CATEGORY_COLORS[name] || '#10b981';
+        }
+
         async function renderAnalytics() {
             await loadRates();
             let income = 0, expense = 0;
@@ -535,7 +544,6 @@
             document.getElementById('total-income').textContent = income.toLocaleString('ru-RU') + ' ' + BASE_CURRENCY;
             document.getElementById('total-expense').textContent = expense.toLocaleString('ru-RU') + ' ' + BASE_CURRENCY;
 
-            // === НОВОЕ УДОБНОЕ РАСПРЕДЕЛЕНИЕ ===
             const distributionContainer = document.getElementById('expense-distribution');
             distributionContainer.innerHTML = '';
 
@@ -546,7 +554,7 @@
                     <div class="text-center py-12">
                         <div class="text-5xl mb-4">📊</div>
                         <div class="text-gray-400 text-lg">Нет расходов за этот месяц</div>
-                        <div class="text-gray-500 text-sm mt-2">Добавьте первую операцию, чтобы увидеть статистику</div>
+                        <div class="text-gray-500 text-sm mt-2">Добавьте расходы, чтобы увидеть распределение</div>
                     </div>`;
                 if (chartInstance) chartInstance.destroy();
                 return;
@@ -554,9 +562,9 @@
 
             const sortedCategories = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
 
+            // Список с прогресс-барами
             sortedCategories.forEach(([name, amount]) => {
                 const percent = ((amount / totalExpense) * 100).toFixed(1);
-                
                 const color = getCategoryColor(name);
                 
                 const div = document.createElement('div');
@@ -576,12 +584,13 @@
                 distributionContainer.appendChild(div);
             });
 
-            // Обновляем круговую диаграмму (на всякий случай)
+            // Круговая диаграмма с теми же цветами
             const ctx = document.getElementById('pie-chart');
             if (chartInstance) chartInstance.destroy();
 
             const labels = sortedCategories.map(([name]) => name);
             const values = sortedCategories.map(([, val]) => val);
+            const backgroundColors = sortedCategories.map(([name]) => getCategoryColor(name));
 
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
@@ -589,29 +598,25 @@
                     labels: labels,
                     datasets: [{
                         data: values,
-                        backgroundColor: ['#10b981', '#14b8a6', '#0ea5e9', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b']
+                        backgroundColor: backgroundColors,
+                        borderWidth: 3,
+                        borderColor: document.body.classList.contains('dark') ? '#1f2937' : '#ffffff'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '65%',
-                    plugins: { legend: { display: false } }
+                    cutout: '68%',
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.label}: ${ctx.raw.toFixed(0)} ${BASE_CURRENCY}`
+                            }
+                        }
+                    }
                 }
             });
-        }
-
-        // Цвета для категорий
-        function getCategoryColor(name) {
-            const colors = {
-                'Еда': '#10b981',
-                'Транспорт': '#14b8a6',
-                'Жильё': '#0ea5e9',
-                'Развлечения': '#8b5cf6',
-                'Здоровье': '#ec4899',
-                'Другое': '#6b7280'
-            };
-            return colors[name] || '#10b981';
         }
 
         function switchPage(page) {
@@ -711,8 +716,8 @@
             applyTelegramTheme();
             switchPage(1);
 
-            showToast('Аналитика расходов улучшена ✅');
-            console.log('🚀 Финансы Mini App — улучшенное распределение расходов');
+            showToast('Цвета в аналитике синхронизированы ✅');
+            console.log('🚀 Финансы Mini App — цвета графиков совпадают');
         }
 
         window.onload = initApp;
