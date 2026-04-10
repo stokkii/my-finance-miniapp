@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Финансы</title>
+    <title>Phantom Finance</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -21,10 +21,10 @@
 <div class="h-screen w-full bg-zinc-950 flex flex-col">
 
     <!-- Верхняя панель -->
-    <div class="px-6 pt-12 pb-6 bg-zinc-900 flex items-center gap-3 border-b border-zinc-800">
+    <div class="px-6 pt-12 pb-6 bg-gradient-to-b from-zinc-900 to-transparent flex items-center gap-3 border-b border-zinc-800">
         <div id="avatar" class="w-12 h-12 rounded-2xl overflow-hidden flex-shrink-0"></div>
         <div>
-            <div id="first_name" class="font-semibold text-2xl">Загрузка...</div>
+            <div id="first_name" class="font-semibold text-xl"></div>
             <div id="username" class="text-sm text-zinc-400"></div>
         </div>
     </div>
@@ -40,38 +40,40 @@
 </div>
 
 <script>
-    function init() {
+    function initApp() {
         const tg = window.Telegram?.WebApp;
         
         if (tg) {
             tg.ready();
-            tg.expand();
             
-            // Дополнительные попытки открыть на весь экран
-            setTimeout(() => tg.expand(), 200);
+            // Максимально агрессивно пытаемся открыть на весь экран
+            tg.expand();
+            setTimeout(() => tg.expand(), 100);
+            setTimeout(() => tg.expand(), 300);
             setTimeout(() => tg.expand(), 600);
+            setTimeout(() => tg.expand(), 1000);
 
             const user = tg.initDataUnsafe?.user || {};
 
             // Аватарка
-            const avatar = document.getElementById('avatar');
+            const avatarEl = document.getElementById('avatar');
             if (user.photo_url) {
-                avatar.innerHTML = `<img src="${user.photo_url}" class="w-full h-full object-cover">`;
+                avatarEl.innerHTML = `<img src="${user.photo_url}" class="w-full h-full object-cover">`;
             } else {
-                avatar.innerHTML = '👤';
+                avatarEl.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center text-3xl">👤</div>`;
             }
 
             // Имя
             document.getElementById('first_name').textContent = user.first_name || 'Пользователь';
             document.getElementById('username').textContent = user.username ? '@' + user.username : '';
         } else {
-            // Если открыто не через Telegram
+            // Для теста в браузере
             document.getElementById('first_name').textContent = 'Тестовый пользователь';
-            document.getElementById('avatar').innerHTML = '👤';
+            document.getElementById('avatar').innerHTML = `<div class="w-full h-full bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center text-3xl">👤</div>`;
         }
     }
 
-    window.onload = init;
+    window.onload = initApp;
 </script>
 </body>
 </html>
