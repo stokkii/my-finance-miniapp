@@ -20,7 +20,7 @@
         .transaction-item { transition: all 0.2s ease; }
         .modal { animation: modalPop 0.3s ease forwards; }
         @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-      
+     
         .text-5xl { font-size: 2.25rem; line-height: 2.5rem; }
         .text-6xl { font-size: 2.8rem; line-height: 3rem; }
         .text-4xl { font-size: 1.8rem; line-height: 2rem; }
@@ -28,12 +28,12 @@
         .text-2xl { font-size: 1.35rem; line-height: 1.6rem; }
         .text-xl { font-size: 1.15rem; line-height: 1.4rem; }
         .text-lg { font-size: 1.05rem; line-height: 1.3rem; }
-      
+     
         .py-6 { padding-top: 1.4rem; padding-bottom: 1.4rem; }
         .px-5 { padding-left: 1.1rem; padding-right: 1.1rem; }
         .py-4 { padding-top: 0.9rem; padding-bottom: 0.9rem; }
         .rounded-3xl { border-radius: 1.4rem; }
-      
+     
         #balance-amount { font-size: 2.4rem; line-height: 2.6rem; font-weight: 600; }
         .analytics-number { font-size: 2.1rem; line-height: 2.3rem; font-weight: 600; }
         .progress-bar {
@@ -67,6 +67,7 @@
             <span class="text-xs">▼</span>
         </div>
     </div>
+
     <div id="main-content" class="p-6 pb-24 max-w-xl mx-auto">
         <!-- PAGE 1: ГЛАВНАЯ -->
         <div id="page-home" class="section">
@@ -156,7 +157,7 @@
                     <div id="total-expense" class="analytics-number text-rose-600 mt-1">0</div>
                 </div>
             </div>
-          
+         
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 mb-6">
                 <h3 class="font-medium mb-5">Распределение расходов</h3>
                 <div id="expense-distribution" class="space-y-5"></div>
@@ -224,8 +225,57 @@
     </div>
 
     <script>
+        // ================================================
+        // ПРИВЯЗКА К ТВОЕМУ БОТУ (новый ключ)
+        // ================================================
+        const BOT_TOKEN = "8302690952:AAFq7NgGnkDJl3ZJi_5Fjk_ba-9zlYpxfaY";
+
+        // Валидация initData (официальный способ Telegram)
+        async function validateTelegramInitData(initData, botToken) {
+            try {
+                const urlParams = new URLSearchParams(initData);
+                const hash = urlParams.get('hash');
+                if (!hash) return false;
+
+                urlParams.delete('hash');
+                const dataCheckArr = Array.from(urlParams.entries())
+                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .map(([key, value]) => `${key}=${value}`);
+
+                const dataCheckString = dataCheckArr.join('\n');
+
+                const encoder = new TextEncoder();
+                const keyData = encoder.encode(botToken);
+                const messageData = encoder.encode("WebAppData");
+
+                const secretKeyBuffer = await crypto.subtle.importKey(
+                    "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+                );
+                const secretKey = await crypto.subtle.sign("HMAC", secretKeyBuffer, messageData);
+
+                const signatureBuffer = await crypto.subtle.sign(
+                    "HMAC",
+                    await crypto.subtle.importKey("raw", secretKey, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]),
+                    encoder.encode(dataCheckString)
+                );
+
+                const calculatedHash = Array.from(new Uint8Array(signatureBuffer))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
+
+                return calculatedHash === hash;
+            } catch (e) {
+                console.error("Validation error:", e);
+                return false;
+            }
+        }
+
+        // ================================================
+        // ОСНОВНЫЕ ПЕРЕМЕННЫЕ И ДАННЫЕ
+        // ================================================
         let TELEGRAM_USER_ID = 'demo';
         let BASE_CURRENCY = 'USD';
+
         const CURRENCIES = [
             { code: 'CZK', name: 'Крона', symbol: 'Kč' },
             { code: 'UAH', name: 'Гривна', symbol: '₴' },
@@ -243,7 +293,6 @@
         };
 
         let ratesToUSD = {};
-
         const FALLBACK_RATES = {
             USD: 1.00000,
             EUR: 1.16850,
@@ -252,7 +301,6 @@
             CZK: 0.04807
         };
 
-        // ==================== МНОГО РАЗНЫХ ЦВЕТОВ (15+ ярких) ====================
         const COLOR_PALETTE = [
             '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e',
             '#14b8a6', '#f59e0b', '#6366f1', '#eab308', '#22c55e',
@@ -340,7 +388,6 @@
             });
         }
 
-        // ==================== Остальной код без изменений ====================
         function renderRecentHistory() {
             const container = document.getElementById('recent-history');
             container.innerHTML = '';
@@ -418,7 +465,7 @@
             currentModalType = type;
             document.getElementById('add-modal').classList.remove('hidden');
             document.getElementById('modal-title').textContent = type === 'income' ? 'Новый доход' : 'Новый расход';
-           
+          
             const incomeBtn = document.getElementById('modal-btn-income');
             const expenseBtn = document.getElementById('modal-btn-expense');
             if (type === 'income') {
@@ -443,9 +490,11 @@
             currentModalType = type;
             showAddTransactionModal(type);
         }
+
         function hideAddTransactionModal() {
             document.getElementById('add-modal').classList.add('hidden');
         }
+
         function renderModalCategories(type) {
             const select = document.getElementById('modal-category');
             select.innerHTML = '';
@@ -456,6 +505,7 @@
                 select.appendChild(opt);
             });
         }
+
         function saveTransaction() {
             const amount = parseFloat(document.getElementById('modal-amount').value);
             if (!amount || amount <= 0) return alert('Введите сумму > 0');
@@ -479,6 +529,7 @@
             renderAnalytics();
             showToast(currentModalType === 'income' ? 'Доход добавлен ✅' : 'Расход добавлен ✅');
         }
+
         function findCategoryById(id) {
             for (let type in DATA.categories) {
                 const found = DATA.categories[type].find(c => c.id === id);
@@ -486,6 +537,7 @@
             }
             return null;
         }
+
         function renderCategories() {
             ['income','expense'].forEach(type => {
                 const container = document.getElementById(type + '-categories');
@@ -498,15 +550,17 @@
                 });
             });
         }
+
         function addCategory(type) {
             const name = prompt(`Название новой категории (${type === 'income' ? 'доход' : 'расход'})?`);
             if (!name?.trim()) return;
             DATA.categories[type].push({id: Date.now(), name: name.trim()});
             saveData();
             renderCategories();
-            renderAnalytics(); // обновляем аналитику сразу
+            renderAnalytics();
             showToast('Категория добавлена');
         }
+
         function deleteCategory(id, type) {
             if (!confirm('Удалить категорию?')) return;
             DATA.categories[type] = DATA.categories[type].filter(c => c.id !== id);
@@ -533,26 +587,21 @@
                     catMap[name] = (catMap[name] || 0) + val;
                 }
             });
-
             document.getElementById('total-income').textContent = income.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + ' ' + BASE_CURRENCY;
             document.getElementById('total-expense').textContent = expense.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + ' ' + BASE_CURRENCY;
 
             const distributionContainer = document.getElementById('expense-distribution');
             distributionContainer.innerHTML = '';
             const totalExpense = Object.values(catMap).reduce((a, b) => a + b, 0);
-
             if (totalExpense === 0) {
                 distributionContainer.innerHTML = `<div class="text-center py-12"><div class="text-5xl mb-4">📊</div><div class="text-gray-400 text-lg">Нет расходов за этот месяц</div></div>`;
                 if (chartInstance) chartInstance.destroy();
                 return;
             }
-
             const sortedCategories = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
-
             sortedCategories.forEach(([name, amount]) => {
                 const percent = ((amount / totalExpense) * 100).toFixed(1);
                 const color = getCategoryColor(name);
-               
                 const div = document.createElement('div');
                 div.className = "space-y-2";
                 div.innerHTML = `
@@ -575,7 +624,6 @@
             const labels = sortedCategories.map(([name]) => name);
             const values = sortedCategories.map(([, val]) => val);
             const backgroundColors = sortedCategories.map(([name]) => getCategoryColor(name));
-
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -634,6 +682,7 @@
         }
 
         function getStorageKey() { return `finance_data_${TELEGRAM_USER_ID}`; }
+
         function loadData() {
             const saved = localStorage.getItem(getStorageKey());
             if (saved) {
@@ -643,16 +692,19 @@
             }
             updateCurrentBaseDisplay();
         }
+
         function saveData() {
             DATA.baseCurrency = BASE_CURRENCY;
             localStorage.setItem(getStorageKey(), JSON.stringify(DATA));
         }
+
         function showToast(text) {
             const t = document.getElementById('toast');
             document.getElementById('toast-text').textContent = text;
             t.classList.remove('hidden');
             setTimeout(() => t.classList.add('hidden'), 2800);
         }
+
         function applyTelegramTheme() {
             const tg = window.Telegram?.WebApp;
             if (!tg) return;
@@ -668,18 +720,37 @@
             }
         }
 
+        // ================================================
+        // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ С ПРОВЕРКОЙ ТОКЕНА
+        // ================================================
         async function initApp() {
             const tg = window.Telegram?.WebApp;
-            if (tg) {
+            if (!tg) {
+                console.warn("Запущено не внутри Telegram WebApp (тест в браузере)");
+                TELEGRAM_USER_ID = 'demo';
+                document.getElementById('user-name').textContent = 'Демо пользователь';
+            } else {
                 tg.expand();
                 tg.ready();
                 tg.setHeaderColor('secondary_bg_color');
+
+                const initData = tg.initData;
+                const isValid = await validateTelegramInitData(initData, BOT_TOKEN);
+
+                if (!isValid) {
+                    alert("❌ Ошибка авторизации!\n\nПриложение привязано к конкретному боту.\nДанные не прошли проверку.");
+                    document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#ef4444;font-size:1.2rem;text-align:center;padding:20px;">Ошибка авторизации.<br>Приложение работает только через вашего бота.</div>`;
+                    return;
+                }
+
                 if (tg.initDataUnsafe?.user) {
                     TELEGRAM_USER_ID = tg.initDataUnsafe.user.id.toString();
                     document.getElementById('user-name').textContent = tg.initDataUnsafe.user.first_name || 'Пользователь';
                 }
+
                 tg.onEvent('themeChanged', applyTelegramTheme);
             }
+
             loadData();
             await loadRates();
             await renderBalance();
@@ -688,8 +759,11 @@
             switchPage(1);
             populateConverterSelects();
             convertCurrency();
-            showToast('Цвета категорий теперь динамические и яркие ✅');
+
+            console.log('✅ Приложение успешно привязано к боту');
+            showToast('Приложение привязано к боту ✅');
         }
+
         window.onload = initApp;
     </script>
 </body>
