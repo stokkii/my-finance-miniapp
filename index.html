@@ -3,67 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Phantom Finance</title>
+    <title>Финансы</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', system-ui, sans-serif; }
-        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+        body, html { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden;
+        }
     </style>
 </head>
 <body class="bg-zinc-950 text-white">
 
-<div class="max-w-md mx-auto h-screen bg-zinc-950 flex flex-col">
+<div class="h-screen w-full bg-zinc-950 flex flex-col">
 
     <!-- Верхняя панель -->
-    <div class="px-6 pt-12 pb-6 bg-gradient-to-b from-zinc-900 to-transparent flex items-center gap-3 border-b border-zinc-800">
+    <div class="px-6 pt-12 pb-6 bg-zinc-900 flex items-center gap-3 border-b border-zinc-800">
         <div id="avatar" class="w-12 h-12 rounded-2xl overflow-hidden flex-shrink-0"></div>
         <div>
-            <div id="first_name" class="font-semibold text-xl"></div>
+            <div id="first_name" class="font-semibold text-2xl">Загрузка...</div>
             <div id="username" class="text-sm text-zinc-400"></div>
         </div>
     </div>
 
-    <!-- Основное пространство -->
-    <div class="flex-1 flex items-center justify-center px-6">
-        <p class="text-zinc-400 text-center">Главный экран скоро появится...</p>
+    <!-- Основная область -->
+    <div class="flex-1 flex items-center justify-center p-6">
+        <div class="text-center">
+            <p class="text-zinc-400 text-lg">Главный экран</p>
+            <p class="text-zinc-500 text-sm mt-2">Скоро здесь будет баланс и кнопки</p>
+        </div>
     </div>
 
 </div>
 
 <script>
-    function initApp() {
+    function init() {
         const tg = window.Telegram?.WebApp;
         
         if (tg) {
             tg.ready();
-            
-            // Максимально агрессивно пытаемся открыть на весь экран
             tg.expand();
-            setTimeout(() => tg.expand(), 300);
-            setTimeout(() => tg.expand(), 800);
+            
+            // Дополнительные попытки открыть на весь экран
+            setTimeout(() => tg.expand(), 200);
+            setTimeout(() => tg.expand(), 600);
 
             const user = tg.initDataUnsafe?.user || {};
 
             // Аватарка
-            const avatarEl = document.getElementById('avatar');
+            const avatar = document.getElementById('avatar');
             if (user.photo_url) {
-                avatarEl.innerHTML = `<img src="${user.photo_url}" class="w-full h-full object-cover">`;
+                avatar.innerHTML = `<img src="${user.photo_url}" class="w-full h-full object-cover">`;
             } else {
-                avatarEl.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center text-3xl">👤</div>`;
+                avatar.innerHTML = '👤';
             }
 
-            // Имя и юзернейм
+            // Имя
             document.getElementById('first_name').textContent = user.first_name || 'Пользователь';
             document.getElementById('username').textContent = user.username ? '@' + user.username : '';
         } else {
-            // Для теста в браузере
+            // Если открыто не через Telegram
             document.getElementById('first_name').textContent = 'Тестовый пользователь';
-            document.getElementById('avatar').innerHTML = `<div class="w-full h-full bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center text-3xl">👤</div>`;
+            document.getElementById('avatar').innerHTML = '👤';
         }
     }
 
-    window.onload = initApp;
+    window.onload = init;
 </script>
 </body>
 </html>
