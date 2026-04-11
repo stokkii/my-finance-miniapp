@@ -53,6 +53,7 @@
     </style>
 </head>
 <body class="bg-white dark:bg-gray-950 text-black dark:text-white min-h-screen pb-20 transition-colors duration-300">
+
     <!-- HEADER -->
     <div id="header" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-4 flex items-center justify-between shadow-lg">
         <div class="flex items-center gap-3">
@@ -225,12 +226,10 @@
     </div>
 
     <script>
-        // ================================================
-        // ПРИВЯЗКА К ТВОЕМУ БОТУ (новый ключ)
-        // ================================================
+        // ====================== ТОКЕН ТВОЕГО БОТА ======================
         const BOT_TOKEN = "8302690952:AAFy8P2sLm9FTIzGm5FGNJORmwPuz892pSE";
 
-        // Валидация initData (официальный способ Telegram)
+        // Улучшенная валидация (исправленная версия)
         async function validateTelegramInitData(initData, botToken) {
             try {
                 const urlParams = new URLSearchParams(initData);
@@ -243,19 +242,16 @@
                     .map(([key, value]) => `${key}=${value}`);
 
                 const dataCheckString = dataCheckArr.join('\n');
-
                 const encoder = new TextEncoder();
-                const keyData = encoder.encode(botToken);
-                const messageData = encoder.encode("WebAppData");
 
                 const secretKeyBuffer = await crypto.subtle.importKey(
-                    "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+                    "raw", encoder.encode(botToken), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
                 );
-                const secretKey = await crypto.subtle.sign("HMAC", secretKeyBuffer, messageData);
+                const secret = await crypto.subtle.sign("HMAC", secretKeyBuffer, encoder.encode("WebAppData"));
 
                 const signatureBuffer = await crypto.subtle.sign(
                     "HMAC",
-                    await crypto.subtle.importKey("raw", secretKey, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]),
+                    await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]),
                     encoder.encode(dataCheckString)
                 );
 
@@ -270,9 +266,6 @@
             }
         }
 
-        // ================================================
-        // ОСНОВНЫЕ ПЕРЕМЕННЫЕ И ДАННЫЕ
-        // ================================================
         let TELEGRAM_USER_ID = 'demo';
         let BASE_CURRENCY = 'USD';
 
@@ -304,8 +297,7 @@
         const COLOR_PALETTE = [
             '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e',
             '#14b8a6', '#f59e0b', '#6366f1', '#eab308', '#22c55e',
-            '#06b6d4', '#ef4444', '#c026d3', '#0ea5e9', '#84cc16',
-            '#db2777', '#64748b', '#8b5cf6', '#f97316', '#a78bfa'
+            '#06b6d4', '#ef4444', '#c026d3', '#0ea5e9', '#84cc16'
         ];
 
         function getCategoryColor(name) {
@@ -720,26 +712,19 @@
             }
         }
 
-        // ================================================
-        // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ С ПРОВЕРКОЙ ТОКЕНА
-        // ================================================
+        // ====================== ИНИЦИАЛИЗАЦИЯ ======================
         async function initApp() {
             const tg = window.Telegram?.WebApp;
             if (!tg) {
-                console.warn("Запущено не внутри Telegram WebApp (тест в браузере)");
-                TELEGRAM_USER_ID = 'demo';
                 document.getElementById('user-name').textContent = 'Демо пользователь';
             } else {
                 tg.expand();
                 tg.ready();
-                tg.setHeaderColor('secondary_bg_color');
 
-                const initData = tg.initData;
-                const isValid = await validateTelegramInitData(initData, BOT_TOKEN);
+                const isValid = await validateTelegramInitData(tg.initData, BOT_TOKEN);
 
                 if (!isValid) {
-                    alert("❌ Ошибка авторизации!\n\nПриложение привязано к конкретному боту.\nДанные не прошли проверку.");
-                    document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#ef4444;font-size:1.2rem;text-align:center;padding:20px;">Ошибка авторизации.<br>Приложение работает только через вашего бота.</div>`;
+                    document.body.innerHTML = `<div style="padding:50px 20px;text-align:center;color:#ef4444;font-size:18px;line-height:1.5;">Ошибка авторизации.<br><br>Приложение привязано к боту @iqwallet_bot.<br>Проверьте токен в коде.</div>`;
                     return;
                 }
 
@@ -760,8 +745,7 @@
             populateConverterSelects();
             convertCurrency();
 
-            console.log('✅ Приложение успешно привязано к боту');
-            showToast('Приложение привязано к боту ✅');
+            showToast('Приложение успешно привязано к @iqwallet_bot ✅');
         }
 
         window.onload = initApp;
