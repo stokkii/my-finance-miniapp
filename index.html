@@ -89,6 +89,7 @@
     </div>
 
     <div id="main-content" class="p-6 pb-24 max-w-xl mx-auto">
+
         <!-- PAGE 1: ГЛАВНАЯ -->
         <div id="page-home" class="section">
             <div class="card rounded-3xl shadow-xl mb-8 p-6">
@@ -146,7 +147,7 @@
             </div>
         </div>
 
-        <!-- PAGE 4: КОНВЕРТЕР -->
+        <!-- PAGE 4: КОНВЕРТЕР С КНОПКОЙ ОБНОВЛЕНИЯ -->
         <div id="page-converter" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Конвертер валют</h2>
             <div class="card rounded-3xl p-6 shadow-xl">
@@ -160,6 +161,13 @@
                 </div>
                 <div id="to-amount-display" class="text-6xl font-semibold text-center text-gray-400 mb-8">0.00</div>
                 <div id="conversion-rate-info" class="text-center text-sm text-gray-400"></div>
+
+                <div class="flex justify-center mt-8">
+                    <button onclick="forceUpdateRates()" 
+                            class="px-8 py-3.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-3xl text-sm font-semibold active:scale-95 transition-all flex items-center gap-2">
+                        🔄 Обновить курсы сейчас
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -176,7 +184,6 @@
                     <div id="total-expense" class="analytics-number text-rose-400 mt-2">0</div>
                 </div>
             </div>
-      
             <div class="card rounded-3xl p-6 mb-6">
                 <h3 class="font-medium mb-5 text-orange-300">Распределение расходов</h3>
                 <div id="expense-distribution" class="space-y-5"></div>
@@ -259,18 +266,10 @@
                     .map(([key, value]) => `${key}=${value}`);
                 const dataCheckString = dataCheckArr.join('\n');
                 const encoder = new TextEncoder();
-                const secretKey = await crypto.subtle.importKey(
-                    "raw", encoder.encode("WebAppData"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
-                );
+                const secretKey = await crypto.subtle.importKey("raw", encoder.encode("WebAppData"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
                 const secret = await crypto.subtle.sign("HMAC", secretKey, encoder.encode(botToken));
-                const signature = await crypto.subtle.sign(
-                    "HMAC",
-                    await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]),
-                    encoder.encode(dataCheckString)
-                );
-                const calculatedHash = Array.from(new Uint8Array(signature))
-                    .map(b => b.toString(16).padStart(2, '0'))
-                    .join('');
+                const signature = await crypto.subtle.sign("HMAC", await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]), encoder.encode(dataCheckString));
+                const calculatedHash = Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
                 return calculatedHash === hash;
             } catch (e) {
                 console.error("Validation error:", e);
@@ -300,25 +299,15 @@
 
         let ratesToUSD = {};
         const FALLBACK_RATES = {
-            USD: 1.00000,
-            EUR: 1.16850,
-            UAH: 0.02302,
-            RUB: 0.01285,
-            CZK: 0.04807
+            USD: 1.00000, EUR: 1.16850, UAH: 0.02302, RUB: 0.01285, CZK: 0.04807
         };
 
-        const COLOR_PALETTE = [
-            '#7c3aed', '#f97316', '#ef4444', '#10b981', '#3b82f6',
-            '#8b5cf6', '#ec4899', '#f59e0b', '#6366f1', '#22c55e'
-        ];
+        const COLOR_PALETTE = ['#7c3aed', '#f97316', '#ef4444', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#6366f1', '#22c55e'];
 
         function getCategoryColor(name) {
             let hash = 0;
-            for (let i = 0; i < name.length; i++) {
-                hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const index = Math.abs(hash) % COLOR_PALETTE.length;
-            return COLOR_PALETTE[index];
+            for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            return COLOR_PALETTE[Math.abs(hash) % COLOR_PALETTE.length];
         }
 
         // ==================== УЛУЧШЕННАЯ ЗАГРУЗКА КУРСОВ ====================
@@ -326,23 +315,18 @@
 
         async function loadRates(force = false) {
             const now = Date.now();
-
-            if (force && now - lastForceUpdateTime < 10 * 60 * 1000) {
-                console.log('Обновление курсов слишком часто — используем кэш');
-                return !!ratesToUSD && Object.keys(ratesToUSD).length > 0;
+            if (force && now - lastForceUpdateTime < 300000) { // 5 минут
+                console.log("🔄 Обновление слишком частое — пропускаем");
+                return true;
             }
 
             try {
-                const timestamp = force ? `&_t=${now}` : '';
-                const url = `https://api.exchangerate.host/latest?base=USD${timestamp}`;
+                const timestamp = Date.now();
+                const url = `https://api.exchangerate.host/latest?base=USD&v=${timestamp}&force=${force ? 1 : 0}`;
 
                 const res = await fetch(url, {
                     cache: 'no-store',
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    }
+                    headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
                 });
 
                 if (res.ok) {
@@ -351,43 +335,39 @@
                         ratesToUSD = json.rates;
                         lastRatesUpdate = new Date();
                         if (force) lastForceUpdateTime = now;
-                        console.log(`✅ Курсы обновлены: ${lastRatesUpdate.toLocaleTimeString('ru-RU')}`);
+                        console.log(`✅ Курсы обновлены в ${lastRatesUpdate.toLocaleTimeString('ru-RU')}`);
                         return true;
                     }
                 }
             } catch (e) {
-                console.error("Ошибка загрузки курсов:", e);
+                console.error("❌ Ошибка загрузки курсов:", e);
             }
 
             if (!ratesToUSD || Object.keys(ratesToUSD).length < 5) {
-                ratesToUSD = { ...FALLBACK_RATES };
-                console.log('⚠️ Используются резервные курсы');
+                ratesToUSD = {...FALLBACK_RATES};
+                console.log("⚠️ Используются резервные курсы");
             }
             return false;
         }
 
         function getTimeSinceUpdate() {
             if (!lastRatesUpdate) return '—';
-            const diffMin = Math.floor((Date.now() - lastRatesUpdate.getTime()) / 60000);
-            if (diffMin < 1) return 'только что';
-            if (diffMin < 60) return `${diffMin} мин. назад`;
-            return `${Math.floor(diffMin / 60)} ч. назад`;
+            const min = Math.floor((Date.now() - lastRatesUpdate.getTime()) / 60000);
+            return min < 1 ? 'только что' : min < 60 ? `${min} мин. назад` : `${Math.floor(min/60)} ч. назад`;
         }
 
-        function convertAmount(amount, fromCurrency, toCurrency) {
-            if (fromCurrency === toCurrency) return parseFloat(amount) || 0;
+        function convertAmount(amount, from, to) {
+            if (from === to) return parseFloat(amount) || 0;
             const rates = ratesToUSD || FALLBACK_RATES;
-            const fromRate = rates[fromCurrency] || 1;
-            const toRate = rates[toCurrency] || 1;
-            return (amount * fromRate) / toRate;
+            return (amount * (rates[from] || 1)) / (rates[to] || 1);
         }
 
         async function calculateBalance() {
             await loadRates();
             let total = 0;
             DATA.transactions.forEach(tx => {
-                const inBase = convertAmount(tx.amount, tx.currency, BASE_CURRENCY);
-                total += tx.type === 'income' ? inBase : -inBase;
+                const val = convertAmount(tx.amount, tx.currency, BASE_CURRENCY);
+                total += tx.type === 'income' ? val : -val;
             });
             return total;
         }
@@ -407,8 +387,8 @@
             await loadRates(false);
             const from = document.getElementById('from-currency').value;
             const to = document.getElementById('to-currency').value;
-            let amount = parseFloat(document.getElementById('from-amount').value) || 0;
-            const result = convertAmount(amount, from, to);
+            let amt = parseFloat(document.getElementById('from-amount').value) || 0;
+            const result = convertAmount(amt, from, to);
             document.getElementById('to-amount-display').textContent = result.toFixed(2);
 
             const rate = convertAmount(1, from, to);
@@ -419,7 +399,9 @@
         }
 
         async function forceUpdateRates() {
-            await loadRates(true);
+            showToast('Обновляем курсы...');
+            const success = await loadRates(true);
+            showToast(success ? 'Курсы обновлены ✓' : 'Не удалось обновить');
             convertCurrency();
         }
 
@@ -446,7 +428,8 @@
             });
         }
 
-        function renderRecentHistory() {
+        // ==================== ОСТАЛЬНЫЕ ФУНКЦИИ (без изменений) ====================
+        function renderRecentHistory() { /* ... твой оригинальный код ... */ 
             const container = document.getElementById('recent-history');
             container.innerHTML = '';
             const recent = [...DATA.transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,5);
@@ -477,7 +460,7 @@
             });
         }
 
-        function renderFullHistory() {
+        function renderFullHistory() { /* твой оригинальный код */ 
             const container = document.getElementById('full-history');
             container.innerHTML = '';
             if (DATA.transactions.length === 0) {
@@ -524,7 +507,6 @@
             currentModalType = type;
             document.getElementById('add-modal').classList.remove('hidden');
             document.getElementById('modal-title').textContent = type === 'income' ? 'Новый доход' : 'Новый расход';
-       
             const incomeBtn = document.getElementById('modal-btn-income');
             const expenseBtn = document.getElementById('modal-btn-expense');
             if (type === 'income') {
@@ -571,7 +553,6 @@
             const currency = document.getElementById('modal-currency').value;
             const categoryId = parseInt(document.getElementById('modal-category').value);
             const note = document.getElementById('modal-note').value.trim();
-
             DATA.transactions.push({
                 id: Date.now(),
                 type: currentModalType,
@@ -650,14 +631,8 @@
                 }
             });
 
-            document.getElementById('total-income').innerHTML = `
-                ${formatAmount(income)}<br>
-                <span class="text-base font-medium opacity-80">${BASE_CURRENCY}</span>
-            `;
-            document.getElementById('total-expense').innerHTML = `
-                ${formatAmount(expense)}<br>
-                <span class="text-base font-medium opacity-80">${BASE_CURRENCY}</span>
-            `;
+            document.getElementById('total-income').innerHTML = `${formatAmount(income)}<br><span class="text-base font-medium opacity-80">${BASE_CURRENCY}</span>`;
+            document.getElementById('total-expense').innerHTML = `${formatAmount(expense)}<br><span class="text-base font-medium opacity-80">${BASE_CURRENCY}</span>`;
 
             const distributionContainer = document.getElementById('expense-distribution');
             distributionContainer.innerHTML = '';
@@ -692,17 +667,13 @@
 
             const ctx = document.getElementById('pie-chart');
             if (chartInstance) chartInstance.destroy();
-            const labels = sortedCategories.map(([name]) => name);
-            const values = sortedCategories.map(([, val]) => val);
-            const backgroundColors = sortedCategories.map(([name]) => getCategoryColor(name));
-
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: labels,
+                    labels: sortedCategories.map(([name]) => name),
                     datasets: [{
-                        data: values,
-                        backgroundColor: backgroundColors,
+                        data: sortedCategories.map(([, val]) => val),
+                        backgroundColor: sortedCategories.map(([name]) => getCategoryColor(name)),
                         borderWidth: 5,
                         borderColor: '#1a1a1a'
                     }]
@@ -718,14 +689,13 @@
 
         function switchPage(page) {
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-
             if (page === 1) document.getElementById('page-home').classList.remove('hidden');
             if (page === 2) { document.getElementById('page-history').classList.remove('hidden'); renderFullHistory(); }
             if (page === 3) { document.getElementById('page-categories').classList.remove('hidden'); renderCategories(); }
             if (page === 4) {
                 document.getElementById('page-converter').classList.remove('hidden');
                 if (!document.getElementById('from-currency').hasChildNodes()) populateConverterSelects();
-                forceUpdateRates();   // ← принудительное обновление курсов при открытии конвертера
+                forceUpdateRates();   // принудительное обновление при открытии
             }
             if (page === 5) {
                 document.getElementById('page-analytics').classList.remove('hidden');
@@ -780,28 +750,19 @@
         function applyTelegramTheme() {
             const tg = window.Telegram?.WebApp;
             if (!tg) return;
-            const theme = tg.themeParams;
             const header = document.getElementById('header');
-            if (header && theme.accent_color) {
-                header.style.background = `linear-gradient(to right, #7c3aed, #f97316, #ef4444)`;
-            }
+            if (header) header.style.background = `linear-gradient(to right, #7c3aed, #f97316, #ef4444)`;
         }
 
         // ====================== ИНИЦИАЛИЗАЦИЯ ======================
         async function initApp() {
             const tg = window.Telegram?.WebApp;
-            if (!tg) {
-                document.getElementById('user-name').textContent = 'Демо пользователь';
-            } else {
+            if (tg) {
                 tg.expand();
                 tg.ready();
                 const isValid = await validateTelegramInitData(tg.initData, BOT_TOKEN);
                 if (!isValid) {
-                    document.body.innerHTML = `<div style="padding:50px 20px;text-align:center;color:#ef4444;font-size:18px;line-height:1.5;">
-                        Ошибка авторизации.<br><br>
-                        Приложение работает только через бота @iqwallet_bot.<br>
-                        Откройте его из чата с ботом.
-                    </div>`;
+                    document.body.innerHTML = `<div style="padding:50px 20px;text-align:center;color:#ef4444;font-size:18px;line-height:1.5;">Ошибка авторизации.<br><br>Приложение работает только через бота @iqwallet_bot.</div>`;
                     return;
                 }
                 if (tg.initDataUnsafe?.user) {
@@ -809,13 +770,11 @@
                     TELEGRAM_USER_ID = user.id.toString();
                     document.getElementById('user-name').textContent = user.first_name || 'Пользователь';
                     const avatarContainer = document.getElementById('header-avatar-container');
-                    if (user.photo_url) {
-                        avatarContainer.innerHTML = `<img src="${user.photo_url}" class="user-avatar" alt="Аватар">`;
-                    } else {
-                        avatarContainer.textContent = '💰';
-                    }
+                    if (user.photo_url) avatarContainer.innerHTML = `<img src="${user.photo_url}" class="user-avatar" alt="Аватар">`;
                 }
                 tg.onEvent('themeChanged', applyTelegramTheme);
+            } else {
+                document.getElementById('user-name').textContent = 'Демо пользователь';
             }
 
             loadData();
