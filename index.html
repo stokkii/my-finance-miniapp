@@ -21,31 +21,19 @@
         .modal { animation: modalPop 0.3s ease forwards; }
         @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-        .text-5xl { font-size: 2.25rem; line-height: 2.5rem; }
-        .text-6xl { font-size: 2.8rem; line-height: 3rem; }
-        .text-4xl { font-size: 1.8rem; line-height: 2rem; }
-        .text-3xl { font-size: 1.6rem; line-height: 1.8rem; }
-        .text-2xl { font-size: 1.35rem; line-height: 1.6rem; }
-        .text-xl { font-size: 1.15rem; line-height: 1.4rem; }
-        .text-lg { font-size: 1.05rem; line-height: 1.3rem; }
-
-        .py-6 { padding-top: 1.4rem; padding-bottom: 1.4rem; }
-        .px-5 { padding-left: 1.1rem; padding-right: 1.1rem; }
-        .py-4 { padding-top: 0.9rem; padding-bottom: 0.9rem; }
-        .rounded-3xl { border-radius: 1.4rem; }
-
         #balance-amount { font-size: 2.4rem; line-height: 2.6rem; font-weight: 600; }
-        
+
+        /* Уменьшенный и удобный шрифт для сумм в аналитике */
         .analytics-number { 
-            font-size: 2.35rem; 
-            line-height: 2.5rem; 
+            font-size: 1.65rem; 
+            line-height: 1.9rem; 
             font-weight: 600; 
             word-break: break-all;
             overflow-wrap: break-word;
         }
         
         .analytics-card {
-            min-height: 118px;
+            min-height: 110px;
         }
 
         .progress-bar {
@@ -126,6 +114,7 @@
         <!-- PAGE 3: КАТЕГОРИИ -->
         <div id="page-categories" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Категории</h2>
+            <!-- категории остаются без изменений -->
             <div class="mb-8">
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="font-medium text-emerald-700">Доходы</h3>
@@ -201,7 +190,7 @@
         </div>
     </div>
 
-    <!-- MODAL -->
+    <!-- MODAL и TOAST (без изменений) -->
     <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" id="add-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <h2 id="modal-title" class="text-2xl font-semibold mb-6">Новая операция</h2>
@@ -465,7 +454,6 @@
             currentModalType = type;
             document.getElementById('add-modal').classList.remove('hidden');
             document.getElementById('modal-title').textContent = type === 'income' ? 'Новый доход' : 'Новый расход';
-        
             const incomeBtn = document.getElementById('modal-btn-income');
             const expenseBtn = document.getElementById('modal-btn-expense');
             if (type === 'income') {
@@ -720,7 +708,6 @@
             }
         }
 
-        // ====================== ИНИЦИАЛИЗАЦИЯ ======================
         async function initApp() {
             const tg = window.Telegram?.WebApp;
             if (!tg) {
@@ -742,7 +729,6 @@
                     TELEGRAM_USER_ID = user.id.toString();
                     document.getElementById('user-name').textContent = user.first_name || 'Пользователь';
 
-                    // Аватарка пользователя
                     const avatarContainer = document.getElementById('header-avatar-container');
                     if (user.photo_url) {
                         avatarContainer.innerHTML = `<img src="${user.photo_url}" class="user-avatar" alt="Аватар">`;
