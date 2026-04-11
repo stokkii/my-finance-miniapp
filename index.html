@@ -147,7 +147,7 @@
             </div>
         </div>
 
-        <!-- PAGE 4: КОНВЕРТЕР С КНОПКОЙ ОБНОВЛЕНИЯ -->
+        <!-- PAGE 4: КОНВЕРТЕР -->
         <div id="page-converter" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Конвертер валют</h2>
             <div class="card rounded-3xl p-6 shadow-xl">
@@ -266,10 +266,18 @@
                     .map(([key, value]) => `${key}=${value}`);
                 const dataCheckString = dataCheckArr.join('\n');
                 const encoder = new TextEncoder();
-                const secretKey = await crypto.subtle.importKey("raw", encoder.encode("WebAppData"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+                const secretKey = await crypto.subtle.importKey(
+                    "raw", encoder.encode("WebAppData"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+                );
                 const secret = await crypto.subtle.sign("HMAC", secretKey, encoder.encode(botToken));
-                const signature = await crypto.subtle.sign("HMAC", await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]), encoder.encode(dataCheckString));
-                const calculatedHash = Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
+                const signature = await crypto.subtle.sign(
+                    "HMAC",
+                    await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]),
+                    encoder.encode(dataCheckString)
+                );
+                const calculatedHash = Array.from(new Uint8Array(signature))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
                 return calculatedHash === hash;
             } catch (e) {
                 console.error("Validation error:", e);
@@ -280,6 +288,7 @@
         let TELEGRAM_USER_ID = 'demo';
         let BASE_CURRENCY = 'USD';
         let lastRatesUpdate = null;
+        let rateUpdateInterval = null;
 
         const CURRENCIES = [
             { code: 'CZK', name: 'Крона', symbol: 'Kč' },
@@ -299,34 +308,35 @@
 
         let ratesToUSD = {};
         const FALLBACK_RATES = {
-            USD: 1.00000, EUR: 1.16850, UAH: 0.02302, RUB: 0.01285, CZK: 0.04807
+            USD: 1.00000,
+            EUR: 1.08500,
+            UAH: 0.02410,
+            RUB: 0.01080,
+            CZK: 0.04320
         };
 
-        const COLOR_PALETTE = ['#7c3aed', '#f97316', '#ef4444', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#6366f1', '#22c55e'];
+        const COLOR_PALETTE = [
+            '#7c3aed', '#f97316', '#ef4444', '#10b981', '#3b82f6',
+            '#8b5cf6', '#ec4899', '#f59e0b', '#6366f1', '#22c55e'
+        ];
 
         function getCategoryColor(name) {
             let hash = 0;
-            for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
             return COLOR_PALETTE[Math.abs(hash) % COLOR_PALETTE.length];
         }
 
-        // ==================== УЛУЧШЕННАЯ ЗАГРУЗКА КУРСОВ ====================
-        let lastForceUpdateTime = 0;
-
+        // ==================== СИСТЕМА КУРСОВ ====================
         async function loadRates(force = false) {
-            const now = Date.now();
-            if (force && now - lastForceUpdateTime < 300000) { // 5 минут
-                console.log("🔄 Обновление слишком частое — пропускаем");
-                return true;
-            }
-
             try {
                 const timestamp = Date.now();
-                const url = `https://api.exchangerate.host/latest?base=USD&v=${timestamp}&force=${force ? 1 : 0}`;
+                const url = `https://api.exchangerate.host/latest?base=USD&_=${timestamp}`;
 
                 const res = await fetch(url, {
                     cache: 'no-store',
-                    headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+                    headers: { 'Cache-Control': 'no-cache, no-store' }
                 });
 
                 if (res.ok) {
@@ -334,17 +344,16 @@
                     if (json.rates && Object.keys(json.rates).length > 30) {
                         ratesToUSD = json.rates;
                         lastRatesUpdate = new Date();
-                        if (force) lastForceUpdateTime = now;
-                        console.log(`✅ Курсы обновлены в ${lastRatesUpdate.toLocaleTimeString('ru-RU')}`);
+                        console.log(`✅ Курсы обновлены: ${lastRatesUpdate.toLocaleTimeString('ru-RU')}`);
                         return true;
                     }
                 }
             } catch (e) {
-                console.error("❌ Ошибка загрузки курсов:", e);
+                console.error("Ошибка загрузки курсов:", e);
             }
 
             if (!ratesToUSD || Object.keys(ratesToUSD).length < 5) {
-                ratesToUSD = {...FALLBACK_RATES};
+                ratesToUSD = { ...FALLBACK_RATES };
                 console.log("⚠️ Используются резервные курсы");
             }
             return false;
@@ -352,43 +361,42 @@
 
         function getTimeSinceUpdate() {
             if (!lastRatesUpdate) return '—';
-            const min = Math.floor((Date.now() - lastRatesUpdate.getTime()) / 60000);
-            return min < 1 ? 'только что' : min < 60 ? `${min} мин. назад` : `${Math.floor(min/60)} ч. назад`;
+            const diff = Math.floor((Date.now() - lastRatesUpdate.getTime()) / 60000);
+            if (diff < 1) return 'только что';
+            if (diff < 60) return `${diff} мин. назад`;
+            return `${Math.floor(diff / 60)} ч. назад`;
         }
 
-        function convertAmount(amount, from, to) {
-            if (from === to) return parseFloat(amount) || 0;
+        function convertAmount(amount, fromCurrency, toCurrency) {
+            if (fromCurrency === toCurrency) return parseFloat(amount) || 0;
             const rates = ratesToUSD || FALLBACK_RATES;
-            return (amount * (rates[from] || 1)) / (rates[to] || 1);
+            const fromRate = rates[fromCurrency] || 1;
+            const toRate = rates[toCurrency] || 1;
+            return (amount * fromRate) / toRate;
         }
 
-        async function calculateBalance() {
-            await loadRates();
-            let total = 0;
-            DATA.transactions.forEach(tx => {
-                const val = convertAmount(tx.amount, tx.currency, BASE_CURRENCY);
-                total += tx.type === 'income' ? val : -val;
-            });
-            return total;
+        // Автообновление каждые 60 минут
+        function startAutoRateUpdate() {
+            if (rateUpdateInterval) clearInterval(rateUpdateInterval);
+            rateUpdateInterval = setInterval(() => {
+                console.log("Автообновление курсов (каждый час)");
+                loadRates(false);
+            }, 60 * 60 * 1000);
         }
 
-        async function renderBalance() {
-            const balance = await calculateBalance();
-            const cur = CURRENCIES.find(c => c.code === BASE_CURRENCY);
-            document.getElementById('balance-amount').textContent = balance.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('balance-currency').innerHTML = `${cur.symbol} <span class="text-base">${cur.code}</span>`;
-        }
-
-        function formatAmount(amount) {
-            return Math.round(amount).toLocaleString('ru-RU').replace(/,/g, ' ');
+        async function forceUpdateRates() {
+            showToast('Обновляем курсы...');
+            const success = await loadRates(true);
+            showToast(success ? 'Курсы успешно обновлены ✓' : 'Не удалось обновить курсы');
+            convertCurrency();
         }
 
         async function convertCurrency() {
             await loadRates(false);
             const from = document.getElementById('from-currency').value;
             const to = document.getElementById('to-currency').value;
-            let amt = parseFloat(document.getElementById('from-amount').value) || 0;
-            const result = convertAmount(amt, from, to);
+            let amount = parseFloat(document.getElementById('from-amount').value) || 0;
+            const result = convertAmount(amount, from, to);
             document.getElementById('to-amount-display').textContent = result.toFixed(2);
 
             const rate = convertAmount(1, from, to);
@@ -396,13 +404,6 @@
                 1 ${from} = ${rate.toFixed(4)} ${to}<br>
                 <span class="text-xs text-gray-500">Обновлено: ${getTimeSinceUpdate()}</span>
             `;
-        }
-
-        async function forceUpdateRates() {
-            showToast('Обновляем курсы...');
-            const success = await loadRates(true);
-            showToast(success ? 'Курсы обновлены ✓' : 'Не удалось обновить');
-            convertCurrency();
         }
 
         function swapCurrencies() {
@@ -428,8 +429,29 @@
             });
         }
 
-        // ==================== ОСТАЛЬНЫЕ ФУНКЦИИ (без изменений) ====================
-        function renderRecentHistory() { /* ... твой оригинальный код ... */ 
+        // ====================== ОСТАЛЬНЫЕ ФУНКЦИИ ======================
+        async function calculateBalance() {
+            await loadRates();
+            let total = 0;
+            DATA.transactions.forEach(tx => {
+                const inBase = convertAmount(tx.amount, tx.currency, BASE_CURRENCY);
+                total += tx.type === 'income' ? inBase : -inBase;
+            });
+            return total;
+        }
+
+        async function renderBalance() {
+            const balance = await calculateBalance();
+            const cur = CURRENCIES.find(c => c.code === BASE_CURRENCY);
+            document.getElementById('balance-amount').textContent = balance.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('balance-currency').innerHTML = `${cur.symbol} <span class="text-base">${cur.code}</span>`;
+        }
+
+        function formatAmount(amount) {
+            return Math.round(amount).toLocaleString('ru-RU').replace(/,/g, ' ');
+        }
+
+        function renderRecentHistory() {
             const container = document.getElementById('recent-history');
             container.innerHTML = '';
             const recent = [...DATA.transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,5);
@@ -460,7 +482,7 @@
             });
         }
 
-        function renderFullHistory() { /* твой оригинальный код */ 
+        function renderFullHistory() {
             const container = document.getElementById('full-history');
             container.innerHTML = '';
             if (DATA.transactions.length === 0) {
@@ -667,23 +689,14 @@
 
             const ctx = document.getElementById('pie-chart');
             if (chartInstance) chartInstance.destroy();
+            const labels = sortedCategories.map(([name]) => name);
+            const values = sortedCategories.map(([, val]) => val);
+            const backgroundColors = sortedCategories.map(([name]) => getCategoryColor(name));
+
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: sortedCategories.map(([name]) => name),
-                    datasets: [{
-                        data: sortedCategories.map(([, val]) => val),
-                        backgroundColor: sortedCategories.map(([name]) => getCategoryColor(name)),
-                        borderWidth: 5,
-                        borderColor: '#1a1a1a'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '68%',
-                    plugins: { legend: { display: false } }
-                }
+                data: { labels, datasets: [{ data: values, backgroundColor: backgroundColors, borderWidth: 5, borderColor: '#1a1a1a' }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { display: false } } }
             });
         }
 
@@ -695,7 +708,7 @@
             if (page === 4) {
                 document.getElementById('page-converter').classList.remove('hidden');
                 if (!document.getElementById('from-currency').hasChildNodes()) populateConverterSelects();
-                forceUpdateRates();   // принудительное обновление при открытии
+                forceUpdateRates();   // обновление при открытии конвертера
             }
             if (page === 5) {
                 document.getElementById('page-analytics').classList.remove('hidden');
@@ -770,7 +783,9 @@
                     TELEGRAM_USER_ID = user.id.toString();
                     document.getElementById('user-name').textContent = user.first_name || 'Пользователь';
                     const avatarContainer = document.getElementById('header-avatar-container');
-                    if (user.photo_url) avatarContainer.innerHTML = `<img src="${user.photo_url}" class="user-avatar" alt="Аватар">`;
+                    if (user.photo_url) {
+                        avatarContainer.innerHTML = `<img src="${user.photo_url}" class="user-avatar" alt="Аватар">`;
+                    }
                 }
                 tg.onEvent('themeChanged', applyTelegramTheme);
             } else {
@@ -784,6 +799,7 @@
             applyTelegramTheme();
             switchPage(1);
             populateConverterSelects();
+            startAutoRateUpdate();   // запуск автообновления каждые 60 минут
         }
 
         window.onload = initApp;
