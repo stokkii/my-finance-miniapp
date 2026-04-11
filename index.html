@@ -20,7 +20,7 @@
         .transaction-item { transition: all 0.2s ease; }
         .modal { animation: modalPop 0.3s ease forwards; }
         @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    
+   
         .text-5xl { font-size: 2.25rem; line-height: 2.5rem; }
         .text-6xl { font-size: 2.8rem; line-height: 3rem; }
         .text-4xl { font-size: 1.8rem; line-height: 2rem; }
@@ -28,12 +28,12 @@
         .text-2xl { font-size: 1.35rem; line-height: 1.6rem; }
         .text-xl { font-size: 1.15rem; line-height: 1.4rem; }
         .text-lg { font-size: 1.05rem; line-height: 1.3rem; }
-    
+   
         .py-6 { padding-top: 1.4rem; padding-bottom: 1.4rem; }
         .px-5 { padding-left: 1.1rem; padding-right: 1.1rem; }
         .py-4 { padding-top: 0.9rem; padding-bottom: 0.9rem; }
         .rounded-3xl { border-radius: 1.4rem; }
-    
+   
         #balance-amount { font-size: 2.4rem; line-height: 2.6rem; font-weight: 600; }
         .analytics-number { font-size: 2.1rem; line-height: 2.3rem; font-weight: 600; }
         .progress-bar {
@@ -49,6 +49,12 @@
             height: 100%;
             border-radius: 9999px;
             transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .goal-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 1rem;
         }
     </style>
 </head>
@@ -151,7 +157,7 @@
                     <div id="total-expense" class="analytics-number text-rose-600 mt-1">0</div>
                 </div>
             </div>
-        
+       
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 mb-6">
                 <h3 class="font-medium mb-5">Распределение расходов</h3>
                 <div id="expense-distribution" class="space-y-5"></div>
@@ -163,20 +169,33 @@
                 </div>
             </div>
         </div>
+
+        <!-- НОВАЯ PAGE 6: ЦЕЛИ -->
+        <div id="page-goals" class="section hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-semibold text-2xl">Цели накопления</h2>
+                <button onclick="showAddGoalModal()" 
+                        class="px-6 py-3 bg-emerald-600 text-white rounded-3xl font-medium flex items-center gap-2 active:scale-95">
+                    <span class="text-xl">+</span> Новая цель
+                </button>
+            </div>
+            <div id="goals-list" class="space-y-6"></div>
+        </div>
     </div>
 
     <!-- BOTTOM NAV -->
     <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 bottom-nav">
-        <div class="max-w-xl mx-auto grid grid-cols-5 text-xs font-medium">
+        <div class="max-w-xl mx-auto grid grid-cols-6 text-xs font-medium">
             <div onclick="switchPage(1)" class="nav-item flex flex-col items-center py-3 text-emerald-600">🏠<br>Главная</div>
             <div onclick="switchPage(2)" class="nav-item flex flex-col items-center py-3 text-gray-500">📜<br>История</div>
             <div onclick="switchPage(3)" class="nav-item flex flex-col items-center py-3 text-gray-500">📂<br>Категории</div>
             <div onclick="switchPage(4)" class="nav-item flex flex-col items-center py-3 text-gray-500">🔄<br>Конвертер</div>
             <div onclick="switchPage(5)" class="nav-item flex flex-col items-center py-3 text-gray-500">📊<br>Аналитика</div>
+            <div onclick="switchPage(6)" class="nav-item flex flex-col items-center py-3 text-gray-500">🎯<br>Цели</div>
         </div>
     </div>
 
-    <!-- MODAL -->
+    <!-- MODAL ДЛЯ ТРАНЗАКЦИИ -->
     <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" id="add-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <h2 id="modal-title" class="text-2xl font-semibold mb-6">Новая операция</h2>
@@ -214,6 +233,39 @@
         </div>
     </div>
 
+    <!-- НОВЫЙ МОДАЛ ДЛЯ ЦЕЛИ -->
+    <div onclick="if(event.target.id === 'goal-modal') hideAddGoalModal()" id="goal-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
+        <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
+            <h2 class="text-2xl font-semibold mb-6">Новая цель накопления</h2>
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Название цели</label>
+                    <input id="goal-name" type="text" placeholder="Например: Ноутбук" 
+                           class="w-full py-4 px-5 rounded-3xl border border-gray-200 focus:border-emerald-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Сумма цели</label>
+                    <div class="flex">
+                        <input id="goal-target" type="text" placeholder="0.00" 
+                               class="flex-1 text-4xl font-semibold bg-transparent border-b-2 border-gray-200 focus:border-emerald-500 outline-none">
+                        <span id="goal-currency-symbol" class="text-3xl ml-3 self-end mb-1 text-emerald-600"></span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Загрузить фото цели (необязательно)</label>
+                    <input id="goal-image" type="file" accept="image/*" class="w-full text-sm">
+                    <div id="goal-image-preview" class="mt-3 hidden">
+                        <img class="w-full h-48 object-cover rounded-2xl" alt="preview">
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="hideAddGoalModal()" class="flex-1 py-5 text-lg font-medium border border-gray-300 rounded-3xl">Отмена</button>
+                    <button onclick="saveGoal()" class="flex-1 py-5 text-lg font-semibold bg-emerald-600 text-white rounded-3xl active:scale-95">Создать цель</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" onclick="this.classList.add('hidden')" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-emerald-700 text-white px-6 py-3 rounded-3xl shadow-2xl text-sm z-50">
         <span id="toast-text"></span>
     </div>
@@ -221,42 +273,31 @@
     <script>
         // ====================== ТОКЕН ТВОЕГО БОТА ======================
         const BOT_TOKEN = "8302690952:AAFy8P2sLm9FTIzGm5FGNJORmwPuz892pSE";
-
-        // ИСПРАВЛЕННАЯ ВАЛИДАЦИЯ (актуальная на 2026)
+        
         async function validateTelegramInitData(initData, botToken) {
             try {
                 if (!initData) return false;
-
                 const urlParams = new URLSearchParams(initData);
                 const hash = urlParams.get('hash');
                 if (!hash) return false;
-
                 urlParams.delete('hash');
-
                 const dataCheckArr = Array.from(urlParams.entries())
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([key, value]) => `${key}=${value}`);
-
                 const dataCheckString = dataCheckArr.join('\n');
-
                 const encoder = new TextEncoder();
-
-                // Правильный порядок: сначала "WebAppData", потом botToken
                 const secretKey = await crypto.subtle.importKey(
                     "raw", encoder.encode("WebAppData"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
                 );
                 const secret = await crypto.subtle.sign("HMAC", secretKey, encoder.encode(botToken));
-
                 const signature = await crypto.subtle.sign(
                     "HMAC",
                     await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]),
                     encoder.encode(dataCheckString)
                 );
-
                 const calculatedHash = Array.from(new Uint8Array(signature))
                     .map(b => b.toString(16).padStart(2, '0'))
                     .join('');
-
                 return calculatedHash === hash;
             } catch (e) {
                 console.error("Validation error:", e);
@@ -278,7 +319,8 @@
                 income: [{id:1,name:'Зарплата'},{id:2,name:'Фриланс'},{id:3,name:'Инвестиции'},{id:4,name:'Другое'}],
                 expense: [{id:5,name:'Еда'},{id:6,name:'Транспорт'},{id:7,name:'Жильё'},{id:8,name:'Развлечения'},{id:9,name:'Здоровье'},{id:10,name:'Другое'}]
             },
-            transactions: []
+            transactions: [],
+            goals: []  // Новая секция
         };
         let ratesToUSD = {};
         const FALLBACK_RATES = {
@@ -451,7 +493,7 @@
             currentModalType = type;
             document.getElementById('add-modal').classList.remove('hidden');
             document.getElementById('modal-title').textContent = type === 'income' ? 'Новый доход' : 'Новый расход';
-         
+        
             const incomeBtn = document.getElementById('modal-btn-income');
             const expenseBtn = document.getElementById('modal-btn-expense');
             if (type === 'income') {
@@ -575,7 +617,6 @@
             });
             document.getElementById('total-income').textContent = income.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + ' ' + BASE_CURRENCY;
             document.getElementById('total-expense').textContent = expense.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + ' ' + BASE_CURRENCY;
-
             const distributionContainer = document.getElementById('expense-distribution');
             distributionContainer.innerHTML = '';
             const totalExpense = Object.values(catMap).reduce((a, b) => a + b, 0);
@@ -604,7 +645,6 @@
                 `;
                 distributionContainer.appendChild(div);
             });
-
             const ctx = document.getElementById('pie-chart');
             if (chartInstance) chartInstance.destroy();
             const labels = sortedCategories.map(([name]) => name);
@@ -644,6 +684,10 @@
                 document.getElementById('page-analytics').classList.remove('hidden');
                 renderAnalytics();
             }
+            if (page === 6) {
+                document.getElementById('page-goals').classList.remove('hidden');
+                renderGoals();
+            }
             document.querySelectorAll('.nav-item').forEach((item, i) => {
                 item.classList.toggle('text-emerald-600', i+1 === page);
                 item.classList.toggle('text-gray-500', i+1 !== page);
@@ -665,6 +709,93 @@
         function updateCurrentBaseDisplay() {
             const c = CURRENCIES.find(cur => cur.code === BASE_CURRENCY);
             document.getElementById('current-base-currency').innerHTML = `${c.symbol} <span class="text-xs">${c.code}</span>`;
+        }
+
+        // ====================== НОВЫЕ ФУНКЦИИ ДЛЯ ЦЕЛЕЙ ======================
+        function showAddGoalModal() {
+            document.getElementById('goal-modal').classList.remove('hidden');
+            document.getElementById('goal-name').value = '';
+            document.getElementById('goal-target').value = '';
+            document.getElementById('goal-image').value = '';
+            document.getElementById('goal-image-preview').classList.add('hidden');
+            document.getElementById('goal-currency-symbol').textContent = CURRENCIES.find(c => c.code === BASE_CURRENCY).symbol;
+        }
+
+        function hideAddGoalModal() {
+            document.getElementById('goal-modal').classList.add('hidden');
+        }
+
+        let currentGoalImage = null;
+        document.getElementById('goal-image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                currentGoalImage = ev.target.result;
+                const preview = document.getElementById('goal-image-preview');
+                preview.querySelector('img').src = currentGoalImage;
+                preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function saveGoal() {
+            const name = document.getElementById('goal-name').value.trim();
+            const target = parseFloat(document.getElementById('goal-target').value);
+
+            if (!name || !target || target <= 0) {
+                alert('Введите название и сумму цели');
+                return;
+            }
+
+            DATA.goals.push({
+                id: Date.now(),
+                name: name,
+                target: target,
+                current: 0,
+                image: currentGoalImage || null,
+                currency: BASE_CURRENCY,
+                created: new Date().toISOString()
+            });
+
+            saveData();
+            hideAddGoalModal();
+            renderGoals();
+            showToast('Цель создана ✅');
+        }
+
+        function renderGoals() {
+            const container = document.getElementById('goals-list');
+            container.innerHTML = '';
+
+            if (DATA.goals.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-gray-400">У вас пока нет целей.<br>Создайте первую!</div>`;
+                return;
+            }
+
+            DATA.goals.forEach(goal => {
+                const percent = goal.target > 0 ? Math.min(100, Math.round((goal.current / goal.target) * 100)) : 0;
+                const cur = CURRENCIES.find(c => c.code === goal.currency) || {symbol: ''};
+
+                const div = document.createElement('div');
+                div.className = "bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-xl";
+                div.innerHTML = `
+                    ${goal.image ? `<img src="${goal.image}" class="goal-image w-full">` : 
+                    `<div class="h-44 bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-6xl">🎯</div>`}
+                    <div class="p-5">
+                        <div class="font-semibold text-lg mb-1">${goal.name}</div>
+                        <div class="flex justify-between text-sm mb-3">
+                            <span class="text-emerald-600 font-medium">${goal.current.toFixed(0)} ${cur.symbol}</span>
+                            <span class="text-gray-400">${goal.target.toFixed(0)} ${cur.symbol}</span>
+                        </div>
+                        <div class="progress-bar mb-2">
+                            <div class="progress-fill" style="width: ${percent}%; background: #10b981;"></div>
+                        </div>
+                        <div class="text-right text-xs text-emerald-600 font-medium">${percent}%</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
         }
 
         function getStorageKey() { return `finance_data_${TELEGRAM_USER_ID}`; }
@@ -706,7 +837,6 @@
             }
         }
 
-        // ====================== ИНИЦИАЛИЗАЦИЯ ======================
         async function initApp() {
             const tg = window.Telegram?.WebApp;
             if (!tg) {
@@ -714,7 +844,6 @@
             } else {
                 tg.expand();
                 tg.ready();
-
                 const isValid = await validateTelegramInitData(tg.initData, BOT_TOKEN);
                 if (!isValid) {
                     document.body.innerHTML = `<div style="padding:50px 20px;text-align:center;color:#ef4444;font-size:18px;line-height:1.5;">
@@ -724,14 +853,12 @@
                     </div>`;
                     return;
                 }
-
                 if (tg.initDataUnsafe?.user) {
                     TELEGRAM_USER_ID = tg.initDataUnsafe.user.id.toString();
                     document.getElementById('user-name').textContent = tg.initDataUnsafe.user.first_name || 'Пользователь';
                 }
                 tg.onEvent('themeChanged', applyTelegramTheme);
             }
-
             loadData();
             await loadRates();
             await renderBalance();
