@@ -16,87 +16,49 @@
         .section { animation: fadeIn 0.3s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .bottom-nav { box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); }
-        .card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .transaction-item { transition: all 0.2s ease; }
         .modal { animation: modalPop 0.3s ease forwards; }
         @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-   
-        .text-5xl { font-size: 2.25rem; line-height: 2.5rem; }
-        .text-6xl { font-size: 2.8rem; line-height: 3rem; }
-        .text-4xl { font-size: 1.8rem; line-height: 2rem; }
-        .text-3xl { font-size: 1.6rem; line-height: 1.8rem; }
-        .text-2xl { font-size: 1.35rem; line-height: 1.6rem; }
-        .text-xl { font-size: 1.15rem; line-height: 1.4rem; }
-        .text-lg { font-size: 1.05rem; line-height: 1.3rem; }
-   
-        .py-6 { padding-top: 1.4rem; padding-bottom: 1.4rem; }
-        .px-5 { padding-left: 1.1rem; padding-right: 1.1rem; }
-        .py-4 { padding-top: 0.9rem; padding-bottom: 0.9rem; }
-        .rounded-3xl { border-radius: 1.4rem; }
-   
-        #balance-amount { font-size: 2.4rem; line-height: 2.6rem; font-weight: 600; }
-        .analytics-number { font-size: 2.1rem; line-height: 2.3rem; font-weight: 600; }
-        .progress-bar {
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 9999px;
-            overflow: hidden;
-        }
-        .dark .progress-bar {
-            background: #374151;
-        }
-        .progress-fill {
-            height: 100%;
-            border-radius: 9999px;
-            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .goal-image {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border-radius: 1rem;
-        }
 
-        /* Компактный стиль для суммы цели */
-        .goal-sum-container {
+        .goal-row {
             display: flex;
             align-items: center;
+            gap: 10px;
+        }
+        .goal-amount {
+            flex: 1;
+            font-size: 1.65rem;
+            font-weight: 600;
+            padding: 12px 16px;
             background: #f8fafc;
             border: 2px solid #e2e8f0;
             border-radius: 9999px;
-            padding: 4px;
-            max-width: 100%;
-        }
-        .dark .goal-sum-container {
-            background: #1f2937;
-            border-color: #374151;
-        }
-        .goal-sum-input {
-            flex: 1;
-            font-size: 1.75rem;
-            font-weight: 600;
-            background: transparent;
-            border: none;
-            outline: none;
-            padding: 12px 20px;
             text-align: right;
+            outline: none;
         }
-        .goal-currency-select {
-            font-size: 1.25rem;
+        .goal-amount:focus {
+            border-color: #10b981;
+            background: white;
+        }
+        .dark .goal-amount {
+            background: #1f2937;
+            border-color: #475569;
+        }
+        .goal-currency {
+            font-size: 1.35rem;
             font-weight: 600;
             padding: 12px 18px;
             background: white;
             border: 2px solid #e2e8f0;
             border-radius: 9999px;
-            margin-left: 8px;
         }
-        .dark .goal-currency-select {
-            background: #374151;
-            border-color: #4b5563;
+        .dark .goal-currency {
+            background: #334155;
+            border-color: #475569;
         }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-950 text-black dark:text-white min-h-screen pb-20 transition-colors duration-300">
+
     <!-- HEADER -->
     <div id="header" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-4 flex items-center justify-between shadow-lg">
         <div class="flex items-center gap-3">
@@ -111,6 +73,7 @@
             <span class="text-xs">▼</span>
         </div>
     </div>
+
     <div id="main-content" class="p-6 pb-24 max-w-xl mx-auto">
         <!-- PAGE 1: ГЛАВНАЯ -->
         <div id="page-home" class="section">
@@ -139,11 +102,13 @@
             </div>
             <div id="recent-history" class="space-y-3"></div>
         </div>
+
         <!-- PAGE 2: ИСТОРИЯ -->
         <div id="page-history" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">История операций</h2>
             <div id="full-history" class="space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto pr-2"></div>
         </div>
+
         <!-- PAGE 3: КАТЕГОРИИ -->
         <div id="page-categories" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Категории</h2>
@@ -166,6 +131,7 @@
                 <div id="expense-categories" class="space-y-2"></div>
             </div>
         </div>
+
         <!-- PAGE 4: КОНВЕРТЕР -->
         <div id="page-converter" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Конвертер валют</h2>
@@ -182,6 +148,7 @@
                 <div id="conversion-rate-info" class="text-center text-sm text-gray-400"></div>
             </div>
         </div>
+
         <!-- PAGE 5: АНАЛИТИКА -->
         <div id="page-analytics" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Аналитика</h2>
@@ -195,7 +162,6 @@
                     <div id="total-expense" class="analytics-number text-rose-600 mt-1">0</div>
                 </div>
             </div>
-       
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 mb-6">
                 <h3 class="font-medium mb-5">Распределение расходов</h3>
                 <div id="expense-distribution" class="space-y-5"></div>
@@ -212,8 +178,7 @@
         <div id="page-goals" class="section hidden">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="font-semibold text-2xl">Цели накопления</h2>
-                <button onclick="showAddGoalModal()" 
-                        class="px-6 py-3 bg-emerald-600 text-white rounded-3xl font-medium flex items-center gap-2 active:scale-95">
+                <button onclick="showAddGoalModal()" class="px-6 py-3 bg-emerald-600 text-white rounded-3xl font-medium flex items-center gap-2 active:scale-95">
                     <span class="text-xl">+</span> Новая цель
                 </button>
             </div>
@@ -233,7 +198,7 @@
         </div>
     </div>
 
-    <!-- MODAL ДЛЯ ТРАНЗАКЦИИ -->
+    <!-- MODAL ТРАНЗАКЦИИ -->
     <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" id="add-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <h2 id="modal-title" class="text-2xl font-semibold mb-6">Новая операция</h2>
@@ -271,7 +236,7 @@
         </div>
     </div>
 
-    <!-- МОДАЛ НОВОЙ ЦЕЛИ (исправленный компактный вариант) -->
+    <!-- МОДАЛ ЦЕЛИ -->
     <div onclick="if(event.target.id === 'goal-modal') hideAddGoalModal()" id="goal-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <h2 class="text-2xl font-semibold mb-6">Новая цель накопления</h2>
@@ -284,11 +249,11 @@
 
             <div class="mb-6">
                 <label class="block text-sm text-gray-500 mb-1.5">Сумма цели</label>
-                <div class="goal-sum-container">
+                <div class="goal-row">
                     <input id="goal-target" type="text" inputmode="decimal" placeholder="0" 
-                           class="goal-sum-input">
-                    <select id="goal-currency-select" class="goal-currency-select">
-                        <!-- заполняется через JS -->
+                           class="goal-amount">
+                    <select id="goal-currency-select" class="goal-currency">
+                        <!-- заполняется JS -->
                     </select>
                 </div>
             </div>
@@ -306,7 +271,7 @@
                 </div>
             </div>
 
-            <div class="flex gap-3 pt-2">
+            <div class="flex gap-3">
                 <button onclick="hideAddGoalModal()" class="flex-1 py-4 text-base font-medium border border-gray-300 rounded-3xl">Отмена</button>
                 <button onclick="saveGoal()" class="flex-1 py-4 text-base font-semibold bg-emerald-600 text-white rounded-3xl active:scale-95">Создать цель</button>
             </div>
@@ -320,7 +285,7 @@
     <script>
         // ====================== ТОКЕН ТВОЕГО БОТА ======================
         const BOT_TOKEN = "8302690952:AAFy8P2sLm9FTIzGm5FGNJORmwPuz892pSE";
-        
+
         async function validateTelegramInitData(initData, botToken) {
             try {
                 if (!initData) return false;
@@ -353,6 +318,7 @@
             { code: 'EUR', name: 'Евро', symbol: '€' },
             { code: 'RUB', name: 'Рубль', symbol: '₽' }
         ];
+
         let DATA = {
             categories: {
                 income: [{id:1,name:'Зарплата'},{id:2,name:'Фриланс'},{id:3,name:'Инвестиции'},{id:4,name:'Другое'}],
@@ -361,29 +327,111 @@
             transactions: [],
             goals: []
         };
-        let ratesToUSD = {};
-        const FALLBACK_RATES = {
-            USD: 1.00000,
-            EUR: 1.16850,
-            UAH: 0.02302,
-            RUB: 0.01285,
-            CZK: 0.04807
-        };
-        const COLOR_PALETTE = [
-            '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e',
-            '#14b8a6', '#f59e0b', '#6366f1', '#eab308', '#22c55e',
-            '#06b6d4', '#ef4444', '#c026d3', '#0ea5e9', '#84cc16'
-        ];
 
-        function getCategoryColor(name) {
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) {
-                hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const index = Math.abs(hash) % COLOR_PALETTE.length;
-            return COLOR_PALETTE[index];
+        let ratesToUSD = {};
+        const FALLBACK_RATES = { USD: 1, EUR: 1.16850, UAH: 0.02302, RUB: 0.01285, CZK: 0.04807 };
+
+        let currentGoalImage = null;
+
+        // ====================== ЦЕЛИ ======================
+        function showAddGoalModal() {
+            document.getElementById('goal-modal').classList.remove('hidden');
+            document.getElementById('goal-name').value = '';
+            document.getElementById('goal-target').value = '';
+            document.getElementById('goal-image-preview').classList.add('hidden');
+            document.getElementById('goal-file-name').textContent = 'image.jpg';
+
+            const select = document.getElementById('goal-currency-select');
+            select.innerHTML = '';
+            CURRENCIES.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.code;
+                opt.textContent = c.symbol;
+                if (c.code === BASE_CURRENCY) opt.selected = true;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('goal-image').onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                document.getElementById('goal-file-name').textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    currentGoalImage = ev.target.result;
+                    const preview = document.getElementById('goal-image-preview');
+                    preview.querySelector('img').src = currentGoalImage;
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            };
         }
 
+        function hideAddGoalModal() {
+            document.getElementById('goal-modal').classList.add('hidden');
+        }
+
+        async function saveGoal() {
+            const name = document.getElementById('goal-name').value.trim();
+            const target = parseFloat(document.getElementById('goal-target').value);
+            const currency = document.getElementById('goal-currency-select').value;
+
+            if (!name) return alert('Введите название цели');
+            if (!target || target <= 0) return alert('Введите сумму цели больше 0');
+
+            const balanceInBase = await calculateBalance();
+            const currentInGoalCurrency = convertAmount(balanceInBase, BASE_CURRENCY, currency);
+
+            DATA.goals.push({
+                id: Date.now(),
+                name: name,
+                target: target,
+                current: currentInGoalCurrency,
+                image: currentGoalImage || null,
+                currency: currency,
+                created: new Date().toISOString()
+            });
+
+            saveData();
+            hideAddGoalModal();
+            renderGoals();
+            renderBalance();
+            showToast('Цель создана ✅');
+        }
+
+        function renderGoals() {
+            const container = document.getElementById('goals-list');
+            container.innerHTML = '';
+
+            if (DATA.goals.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-gray-400">У вас пока нет целей.<br>Создайте первую!</div>`;
+                return;
+            }
+
+            DATA.goals.forEach(goal => {
+                const percent = goal.target > 0 ? Math.min(100, Math.round((goal.current / goal.target) * 100)) : 0;
+                const cur = CURRENCIES.find(c => c.code === goal.currency) || {symbol: ''};
+
+                const div = document.createElement('div');
+                div.className = "bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-xl";
+                div.innerHTML = `
+                    ${goal.image ? `<img src="${goal.image}" class="goal-image w-full">` : `<div class="h-44 bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-6xl">🎯</div>`}
+                    <div class="p-5">
+                        <div class="font-semibold text-lg mb-1">${goal.name}</div>
+                        <div class="flex justify-between text-sm mb-3">
+                            <span class="text-emerald-600 font-medium">${goal.current.toFixed(0)} ${cur.symbol}</span>
+                            <span class="text-gray-400">${goal.target.toFixed(0)} ${cur.symbol}</span>
+                        </div>
+                        <div class="progress-bar mb-2">
+                            <div class="progress-fill" style="width: ${percent}%; background: #10b981;"></div>
+                        </div>
+                        <div class="text-right text-xs text-emerald-600 font-medium">${percent}%</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // ====================== Остальные функции (полностью из твоего кода) ======================
         async function loadRates() {
             try {
                 const res = await fetch('https://api.exchangerate.host/latest?base=USD');
@@ -747,108 +795,6 @@
         function updateCurrentBaseDisplay() {
             const c = CURRENCIES.find(cur => cur.code === BASE_CURRENCY);
             document.getElementById('current-base-currency').innerHTML = `${c.symbol} <span class="text-xs">${c.code}</span>`;
-        }
-
-        // ====================== ЦЕЛИ ======================
-        let currentGoalImage = null;
-
-        function showAddGoalModal() {
-            document.getElementById('goal-modal').classList.remove('hidden');
-            document.getElementById('goal-name').value = '';
-            document.getElementById('goal-target').value = '';
-            document.getElementById('goal-image-preview').classList.add('hidden');
-            document.getElementById('goal-file-name').textContent = 'image.jpg';
-
-            const select = document.getElementById('goal-currency-select');
-            select.innerHTML = '';
-            CURRENCIES.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.code;
-                opt.textContent = c.symbol;
-                if (c.code === BASE_CURRENCY) opt.selected = true;
-                select.appendChild(opt);
-            });
-
-            document.getElementById('goal-image').onchange = function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                document.getElementById('goal-file-name').textContent = file.name.length > 15 ? file.name.substring(0,12)+'...' : file.name;
-                const reader = new FileReader();
-                reader.onload = function(ev) {
-                    currentGoalImage = ev.target.result;
-                    const preview = document.getElementById('goal-image-preview');
-                    preview.querySelector('img').src = currentGoalImage;
-                    preview.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            };
-        }
-
-        function hideAddGoalModal() {
-            document.getElementById('goal-modal').classList.add('hidden');
-            currentGoalImage = null;
-        }
-
-        async function saveGoal() {
-            const name = document.getElementById('goal-name').value.trim();
-            const target = parseFloat(document.getElementById('goal-target').value);
-            const currency = document.getElementById('goal-currency-select').value;
-
-            if (!name) return alert('Введите название цели');
-            if (!target || target <= 0) return alert('Введите сумму цели больше 0');
-
-            const balanceInBase = await calculateBalance();
-            const currentInGoalCurrency = convertAmount(balanceInBase, BASE_CURRENCY, currency);
-
-            DATA.goals.push({
-                id: Date.now(),
-                name: name,
-                target: target,
-                current: currentInGoalCurrency,
-                image: currentGoalImage || null,
-                currency: currency,
-                created: new Date().toISOString()
-            });
-
-            saveData();
-            hideAddGoalModal();
-            renderGoals();
-            renderBalance();
-            showToast('Цель создана ✅ (баланс учтён)');
-        }
-
-        function renderGoals() {
-            const container = document.getElementById('goals-list');
-            container.innerHTML = '';
-
-            if (DATA.goals.length === 0) {
-                container.innerHTML = `<div class="text-center py-12 text-gray-400">У вас пока нет целей.<br>Создайте первую!</div>`;
-                return;
-            }
-
-            DATA.goals.forEach(goal => {
-                const percent = goal.target > 0 ? Math.min(100, Math.round((goal.current / goal.target) * 100)) : 0;
-                const cur = CURRENCIES.find(c => c.code === goal.currency) || {symbol: ''};
-
-                const div = document.createElement('div');
-                div.className = "bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-xl";
-                div.innerHTML = `
-                    ${goal.image ? `<img src="${goal.image}" class="goal-image w-full">` : 
-                    `<div class="h-44 bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-6xl">🎯</div>`}
-                    <div class="p-5">
-                        <div class="font-semibold text-lg mb-1">${goal.name}</div>
-                        <div class="flex justify-between text-sm mb-3">
-                            <span class="text-emerald-600 font-medium">${goal.current.toFixed(0)} ${cur.symbol}</span>
-                            <span class="text-gray-400">${goal.target.toFixed(0)} ${cur.symbol}</span>
-                        </div>
-                        <div class="progress-bar mb-2">
-                            <div class="progress-fill" style="width: ${percent}%; background: #10b981;"></div>
-                        </div>
-                        <div class="text-right text-xs text-emerald-600 font-medium">${percent}%</div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
         }
 
         function getStorageKey() { return `finance_data_${TELEGRAM_USER_ID}`; }
