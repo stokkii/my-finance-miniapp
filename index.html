@@ -36,7 +36,7 @@
 
         #balance-amount { font-size: 2.4rem; line-height: 2.6rem; font-weight: 600; }
 
-        /* Исправленный блок сумм в аналитике — компактный и аккуратный */
+        /* Компактный и красивый блок сумм в аналитике */
         .analytics-card {
             min-height: 118px;
         }
@@ -65,8 +65,8 @@
 
         /* Аватарка пользователя */
         .user-avatar {
-            width: 42px;
-            height: 42px;
+            width: 38px;
+            height: 38px;
             border-radius: 9999px;
             object-fit: cover;
             border: 2px solid rgba(255,255,255,0.3);
@@ -74,12 +74,12 @@
     </style>
 </head>
 <body class="bg-white dark:bg-gray-950 text-black dark:text-white min-h-screen pb-20 transition-colors duration-300">
-    <!-- HEADER -->
-    <div id="header" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-4 flex items-center justify-between shadow-lg">
+    <!-- HEADER — уменьшен примерно на 20% -->
+    <div id="header" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 flex items-center justify-between shadow-lg">
         <div class="flex items-center gap-3">
-            <div id="header-avatar-container" class="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center text-3xl">💰</div>
+            <div id="header-avatar-container" class="w-9 h-9 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">💰</div>
             <div>
-                <h1 class="text-2xl font-semibold tracking-tight">Wallet</h1>
+                <h1 class="text-xl font-semibold tracking-tight">Wallet</h1>
                 <p id="user-name" class="text-sm opacity-80"></p>
             </div>
         </div>
@@ -593,7 +593,6 @@
                 }
             });
 
-            // Красивое отображение сумм в аналитике
             document.getElementById('total-income').innerHTML = `
                 ${formatAmount(income)}<br>
                 <span class="text-base font-medium opacity-80">${BASE_CURRENCY}</span>
@@ -733,7 +732,6 @@
             }
         }
 
-        // ====================== ИНИЦИАЛИЗАЦИЯ ======================
         async function initApp() {
             const tg = window.Telegram?.WebApp;
             if (!tg) {
@@ -755,7 +753,6 @@
                     TELEGRAM_USER_ID = user.id.toString();
                     document.getElementById('user-name').textContent = user.first_name || 'Пользователь';
 
-                    // Аватарка пользователя
                     const avatarContainer = document.getElementById('header-avatar-container');
                     if (user.photo_url) {
                         avatarContainer.innerHTML = `<img src="${user.photo_url}" class="user-avatar" alt="Аватар">`;
