@@ -17,28 +17,22 @@
         }
         .section { animation: fadeIn 0.3s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Градиент хедера: фиолетовый → оранжевый → красный */
         #header {
             background: linear-gradient(to right, #7c3aed, #f97316, #ef4444);
             color: white;
             padding: 0.75rem 1.5rem;
         }
-
         .card, .analytics-card {
             background-color: #1a1a1a;
             border: 1px solid #333333;
         }
-
         .text-gray-400 { color: #a3a3a3; }
         .text-gray-500 { color: #737373; }
-
-        #balance-amount { 
-            font-size: 2.05rem; 
-            line-height: 2.3rem; 
-            font-weight: 600; 
+        #balance-amount {
+            font-size: 2.05rem;
+            line-height: 2.3rem;
+            font-weight: 600;
         }
-
         .action-button {
             padding: 1.05rem 1rem;
             min-height: 108px;
@@ -51,14 +45,12 @@
             font-size: 1.05rem;
             font-weight: 600;
         }
-
         .analytics-number {
             font-size: 1.45rem;
             line-height: 1.6rem;
             font-weight: 600;
             word-break: break-all;
         }
-
         .progress-bar {
             height: 8px;
             background: #333333;
@@ -70,7 +62,6 @@
             border-radius: 9999px;
             transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-
         .user-avatar {
             width: 38px;
             height: 38px;
@@ -78,7 +69,6 @@
             object-fit: cover;
             border: 2px solid rgba(255,255,255,0.25);
         }
-
         .rounded-3xl { border-radius: 1.4rem; }
     </style>
 </head>
@@ -108,7 +98,6 @@
                     <div id="balance-currency" class="text-2xl font-medium text-emerald-400"></div>
                 </div>
             </div>
-
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <button onclick="showAddTransactionModal('income')" class="action-button flex flex-col items-center justify-center bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/30 rounded-3xl active:scale-95 transition-all">
                     <div class="emoji">💰</div>
@@ -119,7 +108,6 @@
                     <div class="label text-rose-400">- Расход</div>
                 </button>
             </div>
-
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="font-semibold text-lg">Последние операции</h2>
                 <button onclick="switchPage(2)" class="text-orange-400 text-sm font-medium flex items-center gap-1">
@@ -188,7 +176,7 @@
                     <div id="total-expense" class="analytics-number text-rose-400 mt-2">0</div>
                 </div>
             </div>
-       
+      
             <div class="card rounded-3xl p-6 mb-6">
                 <h3 class="font-medium mb-5 text-orange-300">Распределение расходов</h3>
                 <div id="expense-distribution" class="space-y-5"></div>
@@ -292,6 +280,8 @@
 
         let TELEGRAM_USER_ID = 'demo';
         let BASE_CURRENCY = 'USD';
+        let lastRatesUpdate = null;
+
         const CURRENCIES = [
             { code: 'CZK', name: 'Крона', symbol: 'Kč' },
             { code: 'UAH', name: 'Гривна', symbol: '₴' },
@@ -299,6 +289,7 @@
             { code: 'EUR', name: 'Евро', symbol: '€' },
             { code: 'RUB', name: 'Рубль', symbol: '₽' }
         ];
+
         let DATA = {
             categories: {
                 income: [{id:1,name:'Зарплата'},{id:2,name:'Фриланс'},{id:3,name:'Инвестиции'},{id:4,name:'Другое'}],
@@ -306,6 +297,7 @@
             },
             transactions: []
         };
+
         let ratesToUSD = {};
         const FALLBACK_RATES = {
             USD: 1.00000,
@@ -314,6 +306,7 @@
             RUB: 0.01285,
             CZK: 0.04807
         };
+
         const COLOR_PALETTE = [
             '#7c3aed', '#f97316', '#ef4444', '#10b981', '#3b82f6',
             '#8b5cf6', '#ec4899', '#f59e0b', '#6366f1', '#22c55e'
@@ -328,16 +321,57 @@
             return COLOR_PALETTE[index];
         }
 
-        async function loadRates() {
+        // ==================== УЛУЧШЕННАЯ ЗАГРУЗКА КУРСОВ ====================
+        let lastForceUpdateTime = 0;
+
+        async function loadRates(force = false) {
+            const now = Date.now();
+
+            if (force && now - lastForceUpdateTime < 10 * 60 * 1000) {
+                console.log('Обновление курсов слишком часто — используем кэш');
+                return !!ratesToUSD && Object.keys(ratesToUSD).length > 0;
+            }
+
             try {
-                const res = await fetch('https://api.exchangerate.host/latest?base=USD');
+                const timestamp = force ? `&_t=${now}` : '';
+                const url = `https://api.exchangerate.host/latest?base=USD${timestamp}`;
+
+                const res = await fetch(url, {
+                    cache: 'no-store',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
+
                 if (res.ok) {
                     const json = await res.json();
-                    ratesToUSD = json.rates;
-                    return;
+                    if (json.rates && Object.keys(json.rates).length > 30) {
+                        ratesToUSD = json.rates;
+                        lastRatesUpdate = new Date();
+                        if (force) lastForceUpdateTime = now;
+                        console.log(`✅ Курсы обновлены: ${lastRatesUpdate.toLocaleTimeString('ru-RU')}`);
+                        return true;
+                    }
                 }
-            } catch(e) {}
-            ratesToUSD = FALLBACK_RATES;
+            } catch (e) {
+                console.error("Ошибка загрузки курсов:", e);
+            }
+
+            if (!ratesToUSD || Object.keys(ratesToUSD).length < 5) {
+                ratesToUSD = { ...FALLBACK_RATES };
+                console.log('⚠️ Используются резервные курсы');
+            }
+            return false;
+        }
+
+        function getTimeSinceUpdate() {
+            if (!lastRatesUpdate) return '—';
+            const diffMin = Math.floor((Date.now() - lastRatesUpdate.getTime()) / 60000);
+            if (diffMin < 1) return 'только что';
+            if (diffMin < 60) return `${diffMin} мин. назад`;
+            return `${Math.floor(diffMin / 60)} ч. назад`;
         }
 
         function convertAmount(amount, fromCurrency, toCurrency) {
@@ -370,14 +404,23 @@
         }
 
         async function convertCurrency() {
-            await loadRates();
+            await loadRates(false);
             const from = document.getElementById('from-currency').value;
             const to = document.getElementById('to-currency').value;
             let amount = parseFloat(document.getElementById('from-amount').value) || 0;
             const result = convertAmount(amount, from, to);
             document.getElementById('to-amount-display').textContent = result.toFixed(2);
+
             const rate = convertAmount(1, from, to);
-            document.getElementById('conversion-rate-info').innerHTML = `1 ${from} = ${rate.toFixed(4)} ${to}`;
+            document.getElementById('conversion-rate-info').innerHTML = `
+                1 ${from} = ${rate.toFixed(4)} ${to}<br>
+                <span class="text-xs text-gray-500">Обновлено: ${getTimeSinceUpdate()}</span>
+            `;
+        }
+
+        async function forceUpdateRates() {
+            await loadRates(true);
+            convertCurrency();
         }
 
         function swapCurrencies() {
@@ -476,11 +519,12 @@
         }
 
         let currentModalType = 'income';
+
         function showAddTransactionModal(type) {
             currentModalType = type;
             document.getElementById('add-modal').classList.remove('hidden');
             document.getElementById('modal-title').textContent = type === 'income' ? 'Новый доход' : 'Новый расход';
-        
+       
             const incomeBtn = document.getElementById('modal-btn-income');
             const expenseBtn = document.getElementById('modal-btn-expense');
             if (type === 'income') {
@@ -527,6 +571,7 @@
             const currency = document.getElementById('modal-currency').value;
             const categoryId = parseInt(document.getElementById('modal-category').value);
             const note = document.getElementById('modal-note').value.trim();
+
             DATA.transactions.push({
                 id: Date.now(),
                 type: currentModalType,
@@ -586,12 +631,14 @@
         }
 
         let chartInstance = null;
+
         async function renderAnalytics() {
             await loadRates();
             let income = 0, expense = 0;
             const catMap = {};
             const now = new Date();
             const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
             DATA.transactions.filter(tx => tx.date >= monthStart).forEach(tx => {
                 const val = convertAmount(tx.amount, tx.currency, BASE_CURRENCY);
                 if (tx.type === 'income') income += val;
@@ -615,11 +662,13 @@
             const distributionContainer = document.getElementById('expense-distribution');
             distributionContainer.innerHTML = '';
             const totalExpense = Object.values(catMap).reduce((a, b) => a + b, 0);
+
             if (totalExpense === 0) {
                 distributionContainer.innerHTML = `<div class="text-center py-12"><div class="text-5xl mb-4">📊</div><div class="text-gray-400 text-lg">Нет расходов за этот месяц</div></div>`;
                 if (chartInstance) chartInstance.destroy();
                 return;
             }
+
             const sortedCategories = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
             sortedCategories.forEach(([name, amount]) => {
                 const percent = ((amount / totalExpense) * 100).toFixed(1);
@@ -646,6 +695,7 @@
             const labels = sortedCategories.map(([name]) => name);
             const values = sortedCategories.map(([, val]) => val);
             const backgroundColors = sortedCategories.map(([name]) => getCategoryColor(name));
+
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -668,18 +718,20 @@
 
         function switchPage(page) {
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+
             if (page === 1) document.getElementById('page-home').classList.remove('hidden');
             if (page === 2) { document.getElementById('page-history').classList.remove('hidden'); renderFullHistory(); }
             if (page === 3) { document.getElementById('page-categories').classList.remove('hidden'); renderCategories(); }
             if (page === 4) {
                 document.getElementById('page-converter').classList.remove('hidden');
                 if (!document.getElementById('from-currency').hasChildNodes()) populateConverterSelects();
-                convertCurrency();
+                forceUpdateRates();   // ← принудительное обновление курсов при открытии конвертера
             }
             if (page === 5) {
                 document.getElementById('page-analytics').classList.remove('hidden');
                 renderAnalytics();
             }
+
             document.querySelectorAll('.nav-item').forEach((item, i) => {
                 item.classList.toggle('text-orange-400', i+1 === page);
                 item.classList.toggle('text-gray-400', i+1 !== page);
@@ -692,8 +744,6 @@
             updateCurrentBaseDisplay();
             saveData();
             renderBalance();
-            renderRecentHistory();
-            renderFullHistory();
             renderAnalytics();
             showToast(`База: ${BASE_CURRENCY}`);
         }
@@ -758,7 +808,6 @@
                     const user = tg.initDataUnsafe.user;
                     TELEGRAM_USER_ID = user.id.toString();
                     document.getElementById('user-name').textContent = user.first_name || 'Пользователь';
-
                     const avatarContainer = document.getElementById('header-avatar-container');
                     if (user.photo_url) {
                         avatarContainer.innerHTML = `<img src="${user.photo_url}" class="user-avatar" alt="Аватар">`;
@@ -776,8 +825,6 @@
             applyTelegramTheme();
             switchPage(1);
             populateConverterSelects();
-            convertCurrency();
-            // Убрано showToast('Приложение успешно запущено ✅');
         }
 
         window.onload = initApp;
