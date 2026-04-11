@@ -11,20 +11,28 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            transition: background-color 0.3s ease;
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+            min-h-screen pb-20;
         }
         .section { animation: fadeIn 0.3s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .bottom-nav { box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); }
-        .card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .transaction-item { transition: all 0.2s ease; }
-        .modal { animation: modalPop 0.3s ease forwards; }
-        @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-        /* Уменьшенная панель баланса */
-        .balance-card {
-            padding: 1.1rem 1.4rem;
+        /* Красивый градиент хедера: фиолетовый → оранжевый → красный */
+        #header {
+            background: linear-gradient(to right, #7c3aed, #f97316, #ef4444);
+            color: white;
+            padding: 0.75rem 1.5rem;
         }
+
+        .card, .analytics-card {
+            background-color: #1a1a1a;
+            border: 1px solid #333333;
+        }
+
+        .text-gray-400 { color: #a3a3a3; }
+        .text-gray-500 { color: #737373; }
+
         #balance-amount { 
             font-size: 2.05rem; 
             line-height: 2.3rem; 
@@ -33,50 +41,30 @@
 
         /* Уменьшенные кнопки Доход / Расход */
         .action-button {
-            padding: 1.1rem 1rem;
-            min-height: 110px;
+            padding: 1.05rem 1rem;
+            min-height: 108px;
         }
         .action-button .emoji {
-            font-size: 2.4rem;
-            margin-bottom: 0.5rem;
+            font-size: 2.35rem;
+            margin-bottom: 0.4rem;
         }
         .action-button .label {
             font-size: 1.05rem;
             font-weight: 600;
         }
 
-        .text-5xl { font-size: 2.25rem; line-height: 2.5rem; }
-        .text-6xl { font-size: 2.8rem; line-height: 3rem; }
-        .text-4xl { font-size: 1.8rem; line-height: 2rem; }
-        .text-3xl { font-size: 1.6rem; line-height: 1.8rem; }
-        .text-2xl { font-size: 1.35rem; line-height: 1.6rem; }
-        .text-xl { font-size: 1.15rem; line-height: 1.4rem; }
-        .text-lg { font-size: 1.05rem; line-height: 1.3rem; }
-
-        .py-6 { padding-top: 1.4rem; padding-bottom: 1.4rem; }
-        .px-5 { padding-left: 1.1rem; padding-right: 1.1rem; }
-        .py-4 { padding-top: 0.9rem; padding-bottom: 0.9rem; }
-        .rounded-3xl { border-radius: 1.4rem; }
-
-        .analytics-card {
-            min-height: 118px;
-        }
         .analytics-number {
-            font-size: 1.48rem;
-            line-height: 1.65rem;
+            font-size: 1.45rem;
+            line-height: 1.6rem;
             font-weight: 600;
             word-break: break-all;
-            overflow-wrap: break-word;
         }
 
         .progress-bar {
             height: 8px;
-            background: #e5e7eb;
+            background: #333333;
             border-radius: 9999px;
             overflow: hidden;
-        }
-        .dark .progress-bar {
-            background: #374151;
         }
         .progress-fill {
             height: 100%;
@@ -89,13 +77,15 @@
             height: 38px;
             border-radius: 9999px;
             object-fit: cover;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.25);
         }
+
+        .rounded-3xl { border-radius: 1.4rem; }
     </style>
 </head>
-<body class="bg-white dark:bg-gray-950 text-black dark:text-white min-h-screen pb-20 transition-colors duration-300">
-    <!-- HEADER (уже уменьшенный) -->
-    <div id="header" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 flex items-center justify-between shadow-lg">
+<body>
+    <!-- HEADER с новым градиентом -->
+    <div id="header" class="flex items-center justify-between shadow-lg">
         <div class="flex items-center gap-3">
             <div id="header-avatar-container" class="w-9 h-9 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">💰</div>
             <div>
@@ -112,37 +102,34 @@
     <div id="main-content" class="p-6 pb-24 max-w-xl mx-auto">
         <!-- PAGE 1: ГЛАВНАЯ -->
         <div id="page-home" class="section">
-            <!-- Уменьшенная панель баланса -->
-            <div class="balance-card card bg-white dark:bg-gray-900 rounded-3xl shadow-xl mb-8">
-                <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">Текущий баланс</div>
+            <div class="card rounded-3xl shadow-xl mb-8 p-6">
+                <div class="text-sm text-gray-400 mb-1">Текущий баланс</div>
                 <div class="flex items-baseline gap-2">
                     <div id="balance-amount" class="font-semibold tracking-tighter">0.00</div>
-                    <div id="balance-currency" class="text-2xl font-medium text-emerald-600"></div>
+                    <div id="balance-currency" class="text-2xl font-medium text-emerald-400"></div>
                 </div>
             </div>
 
-            <!-- Уменьшенные кнопки Доход и Расход -->
             <div class="grid grid-cols-2 gap-4 mb-8">
-                <button onclick="showAddTransactionModal('income')" class="action-button flex flex-col items-center justify-center bg-emerald-50 dark:bg-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors rounded-3xl active:scale-95">
+                <button onclick="showAddTransactionModal('income')" class="action-button flex flex-col items-center justify-center bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/30 rounded-3xl active:scale-95 transition-all">
                     <div class="emoji">💰</div>
-                    <div class="label text-emerald-700 dark:text-emerald-300">+ Доход</div>
+                    <div class="label text-emerald-400">+ Доход</div>
                 </button>
-                <button onclick="showAddTransactionModal('expense')" class="action-button flex flex-col items-center justify-center bg-rose-50 dark:bg-rose-950 hover:bg-rose-100 dark:hover:bg-rose-900 transition-colors rounded-3xl active:scale-95">
+                <button onclick="showAddTransactionModal('expense')" class="action-button flex flex-col items-center justify-center bg-rose-950 hover:bg-rose-900 border border-rose-500/30 rounded-3xl active:scale-95 transition-all">
                     <div class="emoji">🛒</div>
-                    <div class="label text-rose-700 dark:text-rose-300">- Расход</div>
+                    <div class="label text-rose-400">- Расход</div>
                 </button>
             </div>
 
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="font-semibold text-lg">Последние операции</h2>
-                <button onclick="switchPage(2)" class="text-emerald-600 text-sm font-medium flex items-center gap-1">
+                <button onclick="switchPage(2)" class="text-orange-400 text-sm font-medium flex items-center gap-1">
                     Все <span class="text-xl leading-none">→</span>
                 </button>
             </div>
             <div id="recent-history" class="space-y-3"></div>
         </div>
 
-        <!-- Остальные страницы (без изменений) -->
         <!-- PAGE 2: ИСТОРИЯ -->
         <div id="page-history" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">История операций</h2>
@@ -154,7 +141,7 @@
             <h2 class="font-semibold text-2xl mb-6">Категории</h2>
             <div class="mb-8">
                 <div class="flex justify-between items-center mb-3">
-                    <h3 class="font-medium text-emerald-700">Доходы</h3>
+                    <h3 class="font-medium text-emerald-400">Доходы</h3>
                     <button onclick="addCategory('income')" class="px-5 py-2 bg-emerald-600 text-white text-sm font-medium rounded-2xl flex items-center gap-2 active:scale-95">
                         <span class="text-xl">+</span> Добавить
                     </button>
@@ -163,7 +150,7 @@
             </div>
             <div>
                 <div class="flex justify-between items-center mb-3">
-                    <h3 class="font-medium text-rose-700">Расходы</h3>
+                    <h3 class="font-medium text-rose-400">Расходы</h3>
                     <button onclick="addCategory('expense')" class="px-5 py-2 bg-rose-600 text-white text-sm font-medium rounded-2xl flex items-center gap-2 active:scale-95">
                         <span class="text-xl">+</span> Добавить
                     </button>
@@ -175,14 +162,14 @@
         <!-- PAGE 4: КОНВЕРТЕР -->
         <div id="page-converter" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Конвертер валют</h2>
-            <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl">
+            <div class="card rounded-3xl p-6 shadow-xl">
                 <div class="flex justify-between items-center mb-8">
-                    <select id="from-currency" onchange="convertCurrency()" class="bg-transparent text-3xl font-semibold focus:outline-none"></select>
-                    <button onclick="swapCurrencies()" class="w-11 h-11 bg-emerald-100 dark:bg-emerald-900 text-3xl rounded-2xl flex items-center justify-center hover:rotate-180 transition-transform">⇄</button>
-                    <select id="to-currency" onchange="convertCurrency()" class="bg-transparent text-3xl font-semibold focus:outline-none"></select>
+                    <select id="from-currency" onchange="convertCurrency()" class="bg-transparent text-3xl font-semibold focus:outline-none text-white"></select>
+                    <button onclick="swapCurrencies()" class="w-11 h-11 bg-orange-500/20 text-3xl rounded-2xl flex items-center justify-center hover:rotate-180 transition-transform text-orange-400">⇄</button>
+                    <select id="to-currency" onchange="convertCurrency()" class="bg-transparent text-3xl font-semibold focus:outline-none text-white"></select>
                 </div>
                 <div class="flex items-center justify-center mb-8">
-                    <input id="from-amount" type="text" value="1" oninput="convertCurrency()" class="text-6xl font-semibold bg-transparent text-center w-48 focus:outline-none">
+                    <input id="from-amount" type="text" value="1" oninput="convertCurrency()" class="text-6xl font-semibold bg-transparent text-center w-48 focus:outline-none text-white">
                 </div>
                 <div id="to-amount-display" class="text-6xl font-semibold text-center text-gray-400 mb-8">0.00</div>
                 <div id="conversion-rate-info" class="text-center text-sm text-gray-400"></div>
@@ -193,22 +180,22 @@
         <div id="page-analytics" class="section hidden">
             <h2 class="font-semibold text-2xl mb-6">Аналитика</h2>
             <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="analytics-card bg-white dark:bg-gray-900 rounded-3xl p-6">
+                <div class="analytics-card card rounded-3xl p-6">
                     <div class="text-sm text-gray-400">Доходы за месяц</div>
-                    <div id="total-income" class="analytics-number text-emerald-600 mt-2">0</div>
+                    <div id="total-income" class="analytics-number text-emerald-400 mt-2">0</div>
                 </div>
-                <div class="analytics-card bg-white dark:bg-gray-900 rounded-3xl p-6">
+                <div class="analytics-card card rounded-3xl p-6">
                     <div class="text-sm text-gray-400">Расходы за месяц</div>
-                    <div id="total-expense" class="analytics-number text-rose-600 mt-2">0</div>
+                    <div id="total-expense" class="analytics-number text-rose-400 mt-2">0</div>
                 </div>
             </div>
        
-            <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 mb-6">
-                <h3 class="font-medium mb-5">Распределение расходов</h3>
+            <div class="card rounded-3xl p-6 mb-6">
+                <h3 class="font-medium mb-5 text-orange-300">Распределение расходов</h3>
                 <div id="expense-distribution" class="space-y-5"></div>
             </div>
-            <div class="bg-white dark:bg-gray-900 rounded-3xl p-6">
-                <h3 class="font-medium mb-4">Круговая диаграмма</h3>
+            <div class="card rounded-3xl p-6">
+                <h3 class="font-medium mb-4 text-orange-300">Круговая диаграмма</h3>
                 <div class="flex justify-center">
                     <canvas id="pie-chart" class="w-full max-h-60"></canvas>
                 </div>
@@ -217,33 +204,33 @@
     </div>
 
     <!-- BOTTOM NAV -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 bottom-nav">
+    <div class="fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800">
         <div class="max-w-xl mx-auto grid grid-cols-5 text-xs font-medium">
-            <div onclick="switchPage(1)" class="nav-item flex flex-col items-center py-3 text-emerald-600">🏠<br>Главная</div>
-            <div onclick="switchPage(2)" class="nav-item flex flex-col items-center py-3 text-gray-500">📜<br>История</div>
-            <div onclick="switchPage(3)" class="nav-item flex flex-col items-center py-3 text-gray-500">📂<br>Категории</div>
-            <div onclick="switchPage(4)" class="nav-item flex flex-col items-center py-3 text-gray-500">🔄<br>Конвертер</div>
-            <div onclick="switchPage(5)" class="nav-item flex flex-col items-center py-3 text-gray-500">📊<br>Аналитика</div>
+            <div onclick="switchPage(1)" class="nav-item flex flex-col items-center py-3 text-orange-400">🏠<br>Главная</div>
+            <div onclick="switchPage(2)" class="nav-item flex flex-col items-center py-3 text-gray-400">📜<br>История</div>
+            <div onclick="switchPage(3)" class="nav-item flex flex-col items-center py-3 text-gray-400">📂<br>Категории</div>
+            <div onclick="switchPage(4)" class="nav-item flex flex-col items-center py-3 text-gray-400">🔄<br>Конвертер</div>
+            <div onclick="switchPage(5)" class="nav-item flex flex-col items-center py-3 text-gray-400">📊<br>Аналитика</div>
         </div>
     </div>
 
-    <!-- MODAL и TOAST (без изменений) -->
-    <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" id="add-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
-        <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
-            <h2 id="modal-title" class="text-2xl font-semibold mb-6">Новая операция</h2>
+    <!-- MODAL -->
+    <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" id="add-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-end">
+        <div onclick="event.stopImmediatePropagation()" class="modal bg-zinc-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
+            <h2 id="modal-title" class="text-2xl font-semibold mb-6 text-white">Новая операция</h2>
             <div class="space-y-6">
                 <div>
                     <label class="block text-sm text-gray-400 mb-2">Сумма</label>
-                    <input id="modal-amount" type="text" class="w-full text-5xl font-semibold bg-transparent border-b-2 border-gray-200 focus:border-emerald-500 outline-none">
+                    <input id="modal-amount" type="text" class="w-full text-5xl font-semibold bg-transparent border-b-2 border-zinc-700 focus:border-orange-500 outline-none text-white">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm text-gray-400 mb-2">Валюта</label>
-                        <select id="modal-currency" class="w-full text-xl py-3 px-4 rounded-2xl border border-gray-200 focus:border-emerald-500"></select>
+                        <select id="modal-currency" class="w-full text-xl py-3 px-4 rounded-2xl border border-zinc-700 focus:border-orange-500 bg-zinc-900 text-white"></select>
                     </div>
                     <div>
                         <label class="block text-sm text-gray-400 mb-2">Тип</label>
-                        <div id="modal-type-toggle" class="flex rounded-3xl bg-gray-100 dark:bg-gray-800 p-1">
+                        <div id="modal-type-toggle" class="flex rounded-3xl bg-zinc-800 p-1">
                             <button onclick="setModalType('income')" id="modal-btn-income" class="flex-1 py-3 rounded-3xl text-sm font-medium">Доход</button>
                             <button onclick="setModalType('expense')" id="modal-btn-expense" class="flex-1 py-3 rounded-3xl text-sm font-medium">Расход</button>
                         </div>
@@ -251,26 +238,26 @@
                 </div>
                 <div>
                     <label class="block text-sm text-gray-400 mb-2">Категория</label>
-                    <select id="modal-category" class="w-full text-xl py-3 px-4 rounded-2xl border border-gray-200 focus:border-emerald-500"></select>
+                    <select id="modal-category" class="w-full text-xl py-3 px-4 rounded-2xl border border-zinc-700 focus:border-orange-500 bg-zinc-900 text-white"></select>
                 </div>
                 <div>
                     <label class="block text-sm text-gray-400 mb-2">Заметка (необязательно)</label>
-                    <input id="modal-note" type="text" placeholder="Например: Зарплата за март" class="w-full py-4 px-5 rounded-3xl border border-gray-200 focus:border-emerald-500 outline-none">
+                    <input id="modal-note" type="text" placeholder="Например: Зарплата за март" class="w-full py-4 px-5 rounded-3xl border border-zinc-700 focus:border-orange-500 bg-zinc-900 text-white">
                 </div>
                 <div class="flex gap-4">
-                    <button onclick="hideAddTransactionModal()" class="flex-1 py-5 text-lg font-medium border border-gray-300 rounded-3xl">Отмена</button>
-                    <button onclick="saveTransaction()" class="flex-1 py-5 text-lg font-semibold bg-emerald-600 text-white rounded-3xl active:scale-95">Сохранить</button>
+                    <button onclick="hideAddTransactionModal()" class="flex-1 py-5 text-lg font-medium border border-zinc-700 rounded-3xl text-gray-300">Отмена</button>
+                    <button onclick="saveTransaction()" class="flex-1 py-5 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-3xl active:scale-95">Сохранить</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="toast" onclick="this.classList.add('hidden')" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-emerald-700 text-white px-6 py-3 rounded-3xl shadow-2xl text-sm z-50">
+    <div id="toast" onclick="this.classList.add('hidden')" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-orange-600 text-white px-6 py-3 rounded-3xl shadow-2xl text-sm z-50">
         <span id="toast-text"></span>
     </div>
 
     <script>
-        // (Весь JavaScript код полностью сохранён из предыдущей версии — без изменений)
+        // ====================== ТОКЕН ТВОЕГО БОТА ======================
         const BOT_TOKEN = "8302690952:AAFy8P2sLm9FTIzGm5FGNJORmwPuz892pSE";
 
         async function validateTelegramInitData(initData, botToken) {
@@ -329,9 +316,8 @@
             CZK: 0.04807
         };
         const COLOR_PALETTE = [
-            '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e',
-            '#14b8a6', '#f59e0b', '#6366f1', '#eab308', '#22c55e',
-            '#06b6d4', '#ef4444', '#c026d3', '#0ea5e9', '#84cc16'
+            '#7c3aed', '#f97316', '#ef4444', '#10b981', '#3b82f6',
+            '#8b5cf6', '#ec4899', '#f59e0b', '#6366f1', '#22c55e'
         ];
 
         function getCategoryColor(name) {
@@ -429,7 +415,7 @@
             recent.forEach(tx => {
                 const cat = findCategoryById(tx.categoryId);
                 const div = document.createElement('div');
-                div.className = `transaction-item flex justify-between items-center bg-white dark:bg-gray-900 px-5 py-4 rounded-3xl shadow-sm text-sm`;
+                div.className = `transaction-item flex justify-between items-center bg-zinc-900 px-5 py-4 rounded-3xl shadow-sm text-sm`;
                 div.innerHTML = `
                     <div class="flex items-center gap-3 flex-1">
                         <span class="text-3xl">${tx.type === 'income' ? '💰' : '🛒'}</span>
@@ -439,7 +425,7 @@
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="${tx.type === 'income' ? 'text-emerald-600' : 'text-rose-600'} font-semibold">
+                        <div class="${tx.type === 'income' ? 'text-emerald-400' : 'text-rose-400'} font-semibold">
                             ${tx.type === 'income' ? '+' : '-'}${tx.amount.toFixed(2)} ${tx.currency}
                         </div>
                     </div>
@@ -460,7 +446,7 @@
             sorted.forEach(tx => {
                 const cat = findCategoryById(tx.categoryId);
                 const div = document.createElement('div');
-                div.className = `transaction-item flex justify-between items-center bg-white dark:bg-gray-900 px-5 py-4 rounded-3xl shadow-sm text-sm`;
+                div.className = `transaction-item flex justify-between items-center bg-zinc-900 px-5 py-4 rounded-3xl shadow-sm text-sm`;
                 div.innerHTML = `
                     <div class="flex-1 flex items-center gap-3">
                         <span class="text-3xl">${tx.type === 'income' ? '💰' : '🛒'}</span>
@@ -470,7 +456,7 @@
                             ${tx.note ? `<div class="text-xs text-gray-400">${tx.note}</div>` : ''}
                         </div>
                     </div>
-                    <div class="${tx.type === 'income' ? 'text-emerald-600' : 'text-rose-600'} font-semibold">
+                    <div class="${tx.type === 'income' ? 'text-emerald-400' : 'text-rose-400'} font-semibold">
                         ${tx.type === 'income' ? '+' : '-'}${tx.amount.toFixed(2)} ${tx.currency}
                     </div>
                     <button onclick="deleteTransaction(${tx.id});event.stopImmediatePropagation()" class="ml-6 text-2xl text-rose-400">🗑</button>
@@ -574,7 +560,7 @@
                 container.innerHTML = '';
                 DATA.categories[type].forEach(cat => {
                     const div = document.createElement('div');
-                    div.className = `flex justify-between items-center bg-white dark:bg-gray-900 px-5 py-4 rounded-3xl shadow-sm text-sm`;
+                    div.className = `flex justify-between items-center bg-zinc-900 px-5 py-4 rounded-3xl shadow-sm text-sm border border-zinc-800`;
                     div.innerHTML = `<span class="font-medium">${cat.name}</span><button onclick="deleteCategory(${cat.id},'${type}');event.stopImmediatePropagation()" class="text-rose-400 text-2xl">🗑</button>`;
                     container.appendChild(div);
                 });
@@ -646,7 +632,7 @@
                         <div class="font-medium">${name}</div>
                         <div class="text-right">
                             <span class="font-semibold">${formatAmount(amount)} ${BASE_CURRENCY}</span>
-                            <span class="text-emerald-600 ml-3">${percent}%</span>
+                            <span class="text-emerald-400 ml-3">${percent}%</span>
                         </div>
                     </div>
                     <div class="progress-bar">
@@ -669,7 +655,7 @@
                         data: values,
                         backgroundColor: backgroundColors,
                         borderWidth: 5,
-                        borderColor: document.body.classList.contains('dark') ? '#1f2937' : '#ffffff'
+                        borderColor: '#1a1a1a'
                     }]
                 },
                 options: {
@@ -696,8 +682,8 @@
                 renderAnalytics();
             }
             document.querySelectorAll('.nav-item').forEach((item, i) => {
-                item.classList.toggle('text-emerald-600', i+1 === page);
-                item.classList.toggle('text-gray-500', i+1 !== page);
+                item.classList.toggle('text-orange-400', i+1 === page);
+                item.classList.toggle('text-gray-400', i+1 !== page);
             });
         }
 
@@ -746,14 +732,9 @@
             const tg = window.Telegram?.WebApp;
             if (!tg) return;
             const theme = tg.themeParams;
-            if (theme.bg_color && theme.bg_color.toLowerCase() !== '#ffffff' && theme.bg_color.toLowerCase() !== '#f6f6f6') {
-                document.body.classList.add('dark');
-            } else {
-                document.body.classList.remove('dark');
-            }
             const header = document.getElementById('header');
             if (header && theme.accent_color) {
-                header.style.background = `linear-gradient(to right, ${theme.accent_color}, #14b8a6)`;
+                header.style.background = `linear-gradient(to right, #7c3aed, #f97316, #ef4444)`;
             }
         }
 
