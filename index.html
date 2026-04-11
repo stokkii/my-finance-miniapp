@@ -56,6 +56,14 @@
             object-fit: cover;
             border-radius: 1rem;
         }
+
+        /* Улучшенный стиль модала цели */
+        .goal-modal-input {
+            font-size: 1.75rem;
+            font-weight: 600;
+            padding: 14px 20px;
+            border-radius: 1rem;
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-950 text-black dark:text-white min-h-screen pb-20 transition-colors duration-300">
@@ -170,7 +178,7 @@
             </div>
         </div>
 
-        <!-- НОВАЯ PAGE 6: ЦЕЛИ -->
+        <!-- PAGE 6: ЦЕЛИ -->
         <div id="page-goals" class="section hidden">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="font-semibold text-2xl">Цели накопления</h2>
@@ -233,35 +241,51 @@
         </div>
     </div>
 
-    <!-- НОВЫЙ МОДАЛ ДЛЯ ЦЕЛИ -->
+    <!-- УЛУЧШЕННЫЙ МОДАЛ ДЛЯ ЦЕЛИ (топовый дизайн) -->
     <div onclick="if(event.target.id === 'goal-modal') hideAddGoalModal()" id="goal-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <h2 class="text-2xl font-semibold mb-6">Новая цель накопления</h2>
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-sm text-gray-400 mb-2">Название цели</label>
-                    <input id="goal-name" type="text" placeholder="Например: Ноутбук" 
-                           class="w-full py-4 px-5 rounded-3xl border border-gray-200 focus:border-emerald-500 outline-none">
+            
+            <!-- Название цели -->
+            <div class="mb-6">
+                <label class="block text-sm text-gray-400 mb-2">Название цели</label>
+                <input id="goal-name" type="text" placeholder="Например: Шаурмешная" 
+                       class="w-full text-xl font-medium py-4 px-5 rounded-3xl border border-gray-200 focus:border-emerald-500 outline-none">
+            </div>
+
+            <!-- Сумма цели + валюта -->
+            <div class="mb-6">
+                <label class="block text-sm text-gray-400 mb-2">Сумма цели</label>
+                <div class="flex gap-3">
+                    <input id="goal-target" type="text" placeholder="0" 
+                           class="goal-modal-input flex-1 bg-transparent border border-gray-200 focus:border-emerald-500 outline-none text-right">
+                    <select id="goal-currency-select" class="goal-modal-input px-6 text-xl font-semibold border border-gray-200 focus:border-emerald-500 rounded-3xl">
+                        <!-- заполняется JS -->
+                    </select>
                 </div>
-                <div>
-                    <label class="block text-sm text-gray-400 mb-2">Сумма цели</label>
-                    <div class="flex">
-                        <input id="goal-target" type="text" placeholder="0.00" 
-                               class="flex-1 text-4xl font-semibold bg-transparent border-b-2 border-gray-200 focus:border-emerald-500 outline-none">
-                        <span id="goal-currency-symbol" class="text-3xl ml-3 self-end mb-1 text-emerald-600"></span>
-                    </div>
+            </div>
+
+            <!-- Фото -->
+            <div class="mb-6">
+                <label class="block text-sm text-gray-400 mb-2">Загрузить фото цели (необязательно)</label>
+                <div class="flex items-center gap-3 border border-gray-200 rounded-3xl p-2">
+                    <button onclick="document.getElementById('goal-image').click()" 
+                            class="flex-1 py-4 px-6 text-sm font-medium bg-gray-100 dark:bg-gray-800 rounded-3xl hover:bg-gray-200 transition-colors">
+                        Выбрать файл
+                    </button>
+                    <span id="goal-file-name" class="text-sm text-gray-500 flex-1 truncate">image.jpg</span>
                 </div>
-                <div>
-                    <label class="block text-sm text-gray-400 mb-2">Загрузить фото цели (необязательно)</label>
-                    <input id="goal-image" type="file" accept="image/*" class="w-full text-sm">
-                    <div id="goal-image-preview" class="mt-3 hidden">
-                        <img class="w-full h-48 object-cover rounded-2xl" alt="preview">
-                    </div>
+                <input id="goal-image" type="file" accept="image/*" class="hidden">
+                <div id="goal-image-preview" class="mt-4 hidden rounded-3xl overflow-hidden border border-gray-100">
+                    <img class="w-full h-48 object-cover" alt="preview">
                 </div>
-                <div class="flex gap-4">
-                    <button onclick="hideAddGoalModal()" class="flex-1 py-5 text-lg font-medium border border-gray-300 rounded-3xl">Отмена</button>
-                    <button onclick="saveGoal()" class="flex-1 py-5 text-lg font-semibold bg-emerald-600 text-white rounded-3xl active:scale-95">Создать цель</button>
-                </div>
+            </div>
+
+            <div class="flex gap-4 pt-4">
+                <button onclick="hideAddGoalModal()" 
+                        class="flex-1 py-5 text-lg font-medium border border-gray-300 rounded-3xl">Отмена</button>
+                <button onclick="saveGoal()" 
+                        class="flex-1 py-5 text-lg font-semibold bg-emerald-600 text-white rounded-3xl active:scale-95">Создать цель</button>
             </div>
         </div>
     </div>
@@ -320,7 +344,7 @@
                 expense: [{id:5,name:'Еда'},{id:6,name:'Транспорт'},{id:7,name:'Жильё'},{id:8,name:'Развлечения'},{id:9,name:'Здоровье'},{id:10,name:'Другое'}]
             },
             transactions: [],
-            goals: []  // Новая секция
+            goals: []
         };
         let ratesToUSD = {};
         const FALLBACK_RATES = {
@@ -711,57 +735,78 @@
             document.getElementById('current-base-currency').innerHTML = `${c.symbol} <span class="text-xs">${c.code}</span>`;
         }
 
-        // ====================== НОВЫЕ ФУНКЦИИ ДЛЯ ЦЕЛЕЙ ======================
+        // ====================== ЦЕЛИ ======================
+        let currentGoalImage = null;
+
         function showAddGoalModal() {
             document.getElementById('goal-modal').classList.remove('hidden');
+            
+            // Очистка
             document.getElementById('goal-name').value = '';
             document.getElementById('goal-target').value = '';
-            document.getElementById('goal-image').value = '';
             document.getElementById('goal-image-preview').classList.add('hidden');
-            document.getElementById('goal-currency-symbol').textContent = CURRENCIES.find(c => c.code === BASE_CURRENCY).symbol;
+            document.getElementById('goal-file-name').textContent = 'Нет файла';
+
+            // Заполняем выбор валюты
+            const select = document.getElementById('goal-currency-select');
+            select.innerHTML = '';
+            CURRENCIES.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.code;
+                opt.textContent = c.symbol;
+                if (c.code === BASE_CURRENCY) opt.selected = true;
+                select.appendChild(opt);
+            });
+
+            // Слушатель файла
+            const fileInput = document.getElementById('goal-image');
+            fileInput.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                document.getElementById('goal-file-name').textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    currentGoalImage = ev.target.result;
+                    const previewContainer = document.getElementById('goal-image-preview');
+                    previewContainer.querySelector('img').src = currentGoalImage;
+                    previewContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            };
         }
 
         function hideAddGoalModal() {
             document.getElementById('goal-modal').classList.add('hidden');
+            currentGoalImage = null;
         }
 
-        let currentGoalImage = null;
-        document.getElementById('goal-image').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                currentGoalImage = ev.target.result;
-                const preview = document.getElementById('goal-image-preview');
-                preview.querySelector('img').src = currentGoalImage;
-                preview.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        });
-
-        function saveGoal() {
+        async function saveGoal() {
             const name = document.getElementById('goal-name').value.trim();
-            const target = parseFloat(document.getElementById('goal-target').value);
+            let target = parseFloat(document.getElementById('goal-target').value);
+            const currency = document.getElementById('goal-currency-select').value;
 
-            if (!name || !target || target <= 0) {
-                alert('Введите название и сумму цели');
-                return;
-            }
+            if (!name) return alert('Введите название цели');
+            if (!target || target <= 0) return alert('Введите корректную сумму цели');
+
+            // Получаем текущий баланс и конвертируем в валюту цели
+            const balanceInBase = await calculateBalance();
+            const currentInGoalCurrency = convertAmount(balanceInBase, BASE_CURRENCY, currency);
 
             DATA.goals.push({
                 id: Date.now(),
                 name: name,
                 target: target,
-                current: 0,
+                current: currentInGoalCurrency,   // ← автоматически берём весь баланс
                 image: currentGoalImage || null,
-                currency: BASE_CURRENCY,
+                currency: currency,
                 created: new Date().toISOString()
             });
 
             saveData();
             hideAddGoalModal();
             renderGoals();
-            showToast('Цель создана ✅');
+            renderBalance(); // обновляем главный баланс
+            showToast('Цель создана ✅ (баланс учтён в прогрессе)');
         }
 
         function renderGoals() {
