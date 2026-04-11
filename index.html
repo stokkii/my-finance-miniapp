@@ -21,19 +21,31 @@
         .modal { animation: modalPop 0.3s ease forwards; }
         @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
+        .text-5xl { font-size: 2.25rem; line-height: 2.5rem; }
+        .text-6xl { font-size: 2.8rem; line-height: 3rem; }
+        .text-4xl { font-size: 1.8rem; line-height: 2rem; }
+        .text-3xl { font-size: 1.6rem; line-height: 1.8rem; }
+        .text-2xl { font-size: 1.35rem; line-height: 1.6rem; }
+        .text-xl { font-size: 1.15rem; line-height: 1.4rem; }
+        .text-lg { font-size: 1.05rem; line-height: 1.3rem; }
+
+        .py-6 { padding-top: 1.4rem; padding-bottom: 1.4rem; }
+        .px-5 { padding-left: 1.1rem; padding-right: 1.1rem; }
+        .py-4 { padding-top: 0.9rem; padding-bottom: 0.9rem; }
+        .rounded-3xl { border-radius: 1.4rem; }
+
         #balance-amount { font-size: 2.4rem; line-height: 2.6rem; font-weight: 600; }
 
-        /* Компактный шрифт для сумм в аналитике */
-        .analytics-number { 
-            font-size: 1.35rem; 
-            line-height: 1.55rem; 
-            font-weight: 600; 
+        /* Исправленный блок сумм в аналитике — компактный и аккуратный */
+        .analytics-card {
+            min-height: 118px;
+        }
+        .analytics-number {
+            font-size: 1.48rem;
+            line-height: 1.65rem;
+            font-weight: 600;
             word-break: break-all;
             overflow-wrap: break-word;
-        }
-        
-        .analytics-card {
-            min-height: 105px;
         }
 
         .progress-bar {
@@ -51,6 +63,7 @@
             transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
+        /* Аватарка пользователя */
         .user-avatar {
             width: 42px;
             height: 42px;
@@ -342,9 +355,8 @@
             document.getElementById('balance-currency').innerHTML = `${cur.symbol} <span class="text-base">${cur.code}</span>`;
         }
 
-        // Форматирование суммы без запятой и без лишних нулей
         function formatAmount(amount) {
-            return Math.round(amount).toLocaleString('ru-RU').replace(',', ' ');
+            return Math.round(amount).toLocaleString('ru-RU').replace(/,/g, ' ');
         }
 
         async function convertCurrency() {
@@ -458,6 +470,7 @@
             currentModalType = type;
             document.getElementById('add-modal').classList.remove('hidden');
             document.getElementById('modal-title').textContent = type === 'income' ? 'Новый доход' : 'Новый расход';
+        
             const incomeBtn = document.getElementById('modal-btn-income');
             const expenseBtn = document.getElementById('modal-btn-expense');
             if (type === 'income') {
@@ -580,9 +593,15 @@
                 }
             });
 
-            // Форматирование без запятой и без лишних нулей
-            document.getElementById('total-income').textContent = formatAmount(income) + ' ' + BASE_CURRENCY;
-            document.getElementById('total-expense').textContent = formatAmount(expense) + ' ' + BASE_CURRENCY;
+            // Красивое отображение сумм в аналитике
+            document.getElementById('total-income').innerHTML = `
+                ${formatAmount(income)}<br>
+                <span class="text-base font-medium opacity-80">${BASE_CURRENCY}</span>
+            `;
+            document.getElementById('total-expense').innerHTML = `
+                ${formatAmount(expense)}<br>
+                <span class="text-base font-medium opacity-80">${BASE_CURRENCY}</span>
+            `;
 
             const distributionContainer = document.getElementById('expense-distribution');
             distributionContainer.innerHTML = '';
@@ -714,6 +733,7 @@
             }
         }
 
+        // ====================== ИНИЦИАЛИЗАЦИЯ ======================
         async function initApp() {
             const tg = window.Telegram?.WebApp;
             if (!tg) {
@@ -735,6 +755,7 @@
                     TELEGRAM_USER_ID = user.id.toString();
                     document.getElementById('user-name').textContent = user.first_name || 'Пользователь';
 
+                    // Аватарка пользователя
                     const avatarContainer = document.getElementById('header-avatar-container');
                     if (user.photo_url) {
                         avatarContainer.innerHTML = `<img src="${user.photo_url}" class="user-avatar" alt="Аватар">`;
