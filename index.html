@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Финансы • Личный помощник</title>
+    <title>Wallet • Личный помощник</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -35,7 +35,19 @@
         .rounded-3xl { border-radius: 1.4rem; }
 
         #balance-amount { font-size: 2.4rem; line-height: 2.6rem; font-weight: 600; }
-        .analytics-number { font-size: 2.1rem; line-height: 2.3rem; font-weight: 600; }
+        
+        .analytics-number { 
+            font-size: 2.35rem; 
+            line-height: 2.5rem; 
+            font-weight: 600; 
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+        
+        .analytics-card {
+            min-height: 118px;
+        }
+
         .progress-bar {
             height: 8px;
             background: #e5e7eb;
@@ -50,61 +62,23 @@
             border-radius: 9999px;
             transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .goal-image {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border-radius: 1rem;
-        }
 
-        /* ==================== СТИЛЬ МОДАЛА ЦЕЛИ ==================== */
-        .goal-sum-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .goal-amount-input {
-            flex: 1;
-            font-size: 2.1rem;
-            font-weight: 700;
-            padding: 16px 20px;
-            background: #f1f5f9;
-            border: 2px solid #94a3b8;
+        .user-avatar {
+            width: 42px;
+            height: 42px;
             border-radius: 9999px;
-            text-align: right;
-            outline: none;
-        }
-        .goal-amount-input:focus {
-            border-color: #10b981;
-            background: white;
-        }
-        .dark .goal-amount-input {
-            background: #1f2937;
-            border-color: #64748b;
-        }
-        .goal-currency-box {
-            font-size: 1.5rem;
-            font-weight: 600;
-            padding: 16px 22px;
-            background: white;
-            border: 2px solid #94a3b8;
-            border-radius: 9999px;
-            white-space: nowrap;
-        }
-        .dark .goal-currency-box {
-            background: #334155;
-            border-color: #64748b;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.3);
         }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-950 text-black dark:text-white min-h-screen pb-20 transition-colors duration-300">
-
     <!-- HEADER -->
     <div id="header" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-4 flex items-center justify-between shadow-lg">
         <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">💰</div>
+            <div id="header-avatar-container" class="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center text-3xl">💰</div>
             <div>
-                <h1 class="text-2xl font-semibold tracking-tight">Финансы</h1>
+                <h1 class="text-2xl font-semibold tracking-tight">Wallet</h1>
                 <p id="user-name" class="text-sm opacity-80"></p>
             </div>
         </div>
@@ -115,7 +89,6 @@
     </div>
 
     <div id="main-content" class="p-6 pb-24 max-w-xl mx-auto">
-
         <!-- PAGE 1: ГЛАВНАЯ -->
         <div id="page-home" class="section">
             <div class="card bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl mb-8">
@@ -196,13 +169,14 @@
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <div class="analytics-card bg-white dark:bg-gray-900 rounded-3xl p-6">
                     <div class="text-sm text-gray-400">Доходы за месяц</div>
-                    <div id="total-income" class="analytics-number text-emerald-600 mt-1">0</div>
+                    <div id="total-income" class="analytics-number text-emerald-600 mt-2">0</div>
                 </div>
                 <div class="analytics-card bg-white dark:bg-gray-900 rounded-3xl p-6">
                     <div class="text-sm text-gray-400">Расходы за месяц</div>
-                    <div id="total-expense" class="analytics-number text-rose-600 mt-1">0</div>
+                    <div id="total-expense" class="analytics-number text-rose-600 mt-2">0</div>
                 </div>
             </div>
+       
             <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 mb-6">
                 <h3 class="font-medium mb-5">Распределение расходов</h3>
                 <div id="expense-distribution" class="space-y-5"></div>
@@ -214,32 +188,20 @@
                 </div>
             </div>
         </div>
-
-        <!-- PAGE 6: ЦЕЛИ -->
-        <div id="page-goals" class="section hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="font-semibold text-2xl">Цели накопления</h2>
-                <button onclick="showAddGoalModal()" class="px-6 py-3 bg-emerald-600 text-white rounded-3xl font-medium flex items-center gap-2 active:scale-95">
-                    <span class="text-xl">+</span> Новая цель
-                </button>
-            </div>
-            <div id="goals-list" class="space-y-6"></div>
-        </div>
     </div>
 
     <!-- BOTTOM NAV -->
     <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 bottom-nav">
-        <div class="max-w-xl mx-auto grid grid-cols-6 text-xs font-medium">
+        <div class="max-w-xl mx-auto grid grid-cols-5 text-xs font-medium">
             <div onclick="switchPage(1)" class="nav-item flex flex-col items-center py-3 text-emerald-600">🏠<br>Главная</div>
             <div onclick="switchPage(2)" class="nav-item flex flex-col items-center py-3 text-gray-500">📜<br>История</div>
             <div onclick="switchPage(3)" class="nav-item flex flex-col items-center py-3 text-gray-500">📂<br>Категории</div>
             <div onclick="switchPage(4)" class="nav-item flex flex-col items-center py-3 text-gray-500">🔄<br>Конвертер</div>
             <div onclick="switchPage(5)" class="nav-item flex flex-col items-center py-3 text-gray-500">📊<br>Аналитика</div>
-            <div onclick="switchPage(6)" class="nav-item flex flex-col items-center py-3 text-gray-500">🎯<br>Цели</div>
         </div>
     </div>
 
-    <!-- MODAL ДЛЯ ТРАНЗАКЦИИ -->
+    <!-- MODAL -->
     <div onclick="if(event.target.id === 'add-modal') hideAddTransactionModal()" id="add-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
         <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
             <h2 id="modal-title" class="text-2xl font-semibold mb-6">Новая операция</h2>
@@ -277,52 +239,6 @@
         </div>
     </div>
 
-    <!-- МОДАЛ ДЛЯ ЦЕЛИ (исправленный и видимый) -->
-    <div onclick="if(event.target.id === 'goal-modal') hideAddGoalModal()" id="goal-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-end">
-        <div onclick="event.stopImmediatePropagation()" class="modal bg-white dark:bg-gray-900 w-full rounded-t-3xl p-6 max-h-[85vh] overflow-y-auto">
-            <h2 class="text-2xl font-semibold mb-6">Новая цель накопления</h2>
-
-            <!-- Название цели -->
-            <div class="mb-6">
-                <label class="block text-sm text-gray-500 mb-2">Название цели</label>
-                <input id="goal-name" type="text" placeholder="Например: Ноутбук" 
-                       class="w-full py-4 px-5 text-lg font-medium rounded-3xl border border-gray-200 focus:border-emerald-500 outline-none">
-            </div>
-
-            <!-- Сумма цели + валюта -->
-            <div class="mb-8">
-                <label class="block text-sm text-gray-500 mb-2">Сумма цели</label>
-                <div class="goal-sum-row">
-                    <input id="goal-target" type="text" inputmode="decimal" placeholder="0" 
-                           class="goal-amount-input">
-                    <select id="goal-currency-select" class="goal-currency-box">
-                        <!-- заполняется через JS -->
-                    </select>
-                </div>
-            </div>
-
-            <!-- Фото цели -->
-            <div class="mb-8">
-                <label class="block text-sm text-gray-500 mb-2">Загрузить фото цели (необязательно)</label>
-                <div onclick="document.getElementById('goal-image').click()" 
-                     class="flex justify-between items-center border border-gray-200 rounded-3xl px-5 py-4 cursor-pointer hover:bg-gray-50">
-                    <span class="text-emerald-600 font-medium">Выбрать файл</span>
-                    <span id="goal-file-name" class="text-gray-400 text-sm">image.jpg</span>
-                </div>
-                <input id="goal-image" type="file" accept="image/*" class="hidden">
-                <div id="goal-image-preview" class="mt-4 hidden rounded-2xl overflow-hidden border border-gray-100">
-                    <img class="w-full h-48 object-cover" alt="preview">
-                </div>
-            </div>
-
-            <!-- Кнопки -->
-            <div class="flex gap-4">
-                <button onclick="hideAddGoalModal()" class="flex-1 py-5 text-lg font-medium border border-gray-300 rounded-3xl">Отмена</button>
-                <button onclick="saveGoal()" class="flex-1 py-5 text-lg font-semibold bg-emerald-600 text-white rounded-3xl active:scale-95">Создать цель</button>
-            </div>
-        </div>
-    </div>
-
     <div id="toast" onclick="this.classList.add('hidden')" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-emerald-700 text-white px-6 py-3 rounded-3xl shadow-2xl text-sm z-50">
         <span id="toast-text"></span>
     </div>
@@ -343,10 +259,18 @@
                     .map(([key, value]) => `${key}=${value}`);
                 const dataCheckString = dataCheckArr.join('\n');
                 const encoder = new TextEncoder();
-                const secretKey = await crypto.subtle.importKey("raw", encoder.encode("WebAppData"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+                const secretKey = await crypto.subtle.importKey(
+                    "raw", encoder.encode("WebAppData"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+                );
                 const secret = await crypto.subtle.sign("HMAC", secretKey, encoder.encode(botToken));
-                const signature = await crypto.subtle.sign("HMAC", await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]), encoder.encode(dataCheckString));
-                const calculatedHash = Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
+                const signature = await crypto.subtle.sign(
+                    "HMAC",
+                    await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]),
+                    encoder.encode(dataCheckString)
+                );
+                const calculatedHash = Array.from(new Uint8Array(signature))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('');
                 return calculatedHash === hash;
             } catch (e) {
                 console.error("Validation error:", e);
@@ -363,16 +287,13 @@
             { code: 'EUR', name: 'Евро', symbol: '€' },
             { code: 'RUB', name: 'Рубль', symbol: '₽' }
         ];
-
         let DATA = {
             categories: {
                 income: [{id:1,name:'Зарплата'},{id:2,name:'Фриланс'},{id:3,name:'Инвестиции'},{id:4,name:'Другое'}],
                 expense: [{id:5,name:'Еда'},{id:6,name:'Транспорт'},{id:7,name:'Жильё'},{id:8,name:'Развлечения'},{id:9,name:'Здоровье'},{id:10,name:'Другое'}]
             },
-            transactions: [],
-            goals: []
+            transactions: []
         };
-
         let ratesToUSD = {};
         const FALLBACK_RATES = {
             USD: 1.00000,
@@ -381,7 +302,6 @@
             RUB: 0.01285,
             CZK: 0.04807
         };
-
         const COLOR_PALETTE = [
             '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e',
             '#14b8a6', '#f59e0b', '#6366f1', '#eab308', '#22c55e',
@@ -669,6 +589,7 @@
             });
             document.getElementById('total-income').textContent = income.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + ' ' + BASE_CURRENCY;
             document.getElementById('total-expense').textContent = expense.toLocaleString('ru-RU', {minimumFractionDigits: 2}) + ' ' + BASE_CURRENCY;
+
             const distributionContainer = document.getElementById('expense-distribution');
             distributionContainer.innerHTML = '';
             const totalExpense = Object.values(catMap).reduce((a, b) => a + b, 0);
@@ -697,6 +618,7 @@
                 `;
                 distributionContainer.appendChild(div);
             });
+
             const ctx = document.getElementById('pie-chart');
             if (chartInstance) chartInstance.destroy();
             const labels = sortedCategories.map(([name]) => name);
@@ -736,10 +658,6 @@
                 document.getElementById('page-analytics').classList.remove('hidden');
                 renderAnalytics();
             }
-            if (page === 6) {
-                document.getElementById('page-goals').classList.remove('hidden');
-                renderGoals();
-            }
             document.querySelectorAll('.nav-item').forEach((item, i) => {
                 item.classList.toggle('text-emerald-600', i+1 === page);
                 item.classList.toggle('text-gray-500', i+1 !== page);
@@ -761,105 +679,6 @@
         function updateCurrentBaseDisplay() {
             const c = CURRENCIES.find(cur => cur.code === BASE_CURRENCY);
             document.getElementById('current-base-currency').innerHTML = `${c.symbol} <span class="text-xs">${c.code}</span>`;
-        }
-
-        // ====================== ЦЕЛИ ======================
-        function showAddGoalModal() {
-            document.getElementById('goal-modal').classList.remove('hidden');
-            document.getElementById('goal-name').value = '';
-            document.getElementById('goal-target').value = '';
-            document.getElementById('goal-image-preview').classList.add('hidden');
-            document.getElementById('goal-file-name').textContent = 'image.jpg';
-
-            const select = document.getElementById('goal-currency-select');
-            select.innerHTML = '';
-            CURRENCIES.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.code;
-                opt.textContent = c.symbol;
-                if (c.code === BASE_CURRENCY) opt.selected = true;
-                select.appendChild(opt);
-            });
-
-            document.getElementById('goal-image').onchange = function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                document.getElementById('goal-file-name').textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = function(ev) {
-                    currentGoalImage = ev.target.result;
-                    const preview = document.getElementById('goal-image-preview');
-                    preview.querySelector('img').src = currentGoalImage;
-                    preview.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            };
-        }
-
-        function hideAddGoalModal() {
-            document.getElementById('goal-modal').classList.add('hidden');
-            currentGoalImage = null;
-        }
-
-        async function saveGoal() {
-            const name = document.getElementById('goal-name').value.trim();
-            const target = parseFloat(document.getElementById('goal-target').value);
-            const currency = document.getElementById('goal-currency-select').value;
-
-            if (!name) return alert('Введите название цели');
-            if (!target || target <= 0) return alert('Введите сумму цели больше 0');
-
-            const balanceInBase = await calculateBalance();
-            const currentInGoalCurrency = convertAmount(balanceInBase, BASE_CURRENCY, currency);
-
-            DATA.goals.push({
-                id: Date.now(),
-                name: name,
-                target: target,
-                current: currentInGoalCurrency,
-                image: currentGoalImage || null,
-                currency: currency,
-                created: new Date().toISOString()
-            });
-
-            saveData();
-            hideAddGoalModal();
-            renderGoals();
-            renderBalance();
-            showToast('Цель создана ✅ (баланс учтён)');
-        }
-
-        function renderGoals() {
-            const container = document.getElementById('goals-list');
-            container.innerHTML = '';
-
-            if (DATA.goals.length === 0) {
-                container.innerHTML = `<div class="text-center py-12 text-gray-400">У вас пока нет целей.<br>Создайте первую!</div>`;
-                return;
-            }
-
-            DATA.goals.forEach(goal => {
-                const percent = goal.target > 0 ? Math.min(100, Math.round((goal.current / goal.target) * 100)) : 0;
-                const cur = CURRENCIES.find(c => c.code === goal.currency) || {symbol: ''};
-
-                const div = document.createElement('div');
-                div.className = "bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-xl";
-                div.innerHTML = `
-                    ${goal.image ? `<img src="${goal.image}" class="goal-image w-full">` : `<div class="h-44 bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-6xl">🎯</div>`}
-                    <div class="p-5">
-                        <div class="font-semibold text-lg mb-1">${goal.name}</div>
-                        <div class="flex justify-between text-sm mb-3">
-                            <span class="text-emerald-600 font-medium">${goal.current.toFixed(0)} ${cur.symbol}</span>
-                            <span class="text-gray-400">${goal.target.toFixed(0)} ${cur.symbol}</span>
-                        </div>
-                        <div class="progress-bar mb-2">
-                            <div class="progress-fill" style="width: ${percent}%; background: #10b981;"></div>
-                        </div>
-                        <div class="text-right text-xs text-emerald-600 font-medium">${percent}%</div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
         }
 
         function getStorageKey() { return `finance_data_${TELEGRAM_USER_ID}`; }
@@ -901,6 +720,7 @@
             }
         }
 
+        // ====================== ИНИЦИАЛИЗАЦИЯ ======================
         async function initApp() {
             const tg = window.Telegram?.WebApp;
             if (!tg) {
@@ -918,11 +738,21 @@
                     return;
                 }
                 if (tg.initDataUnsafe?.user) {
-                    TELEGRAM_USER_ID = tg.initDataUnsafe.user.id.toString();
-                    document.getElementById('user-name').textContent = tg.initDataUnsafe.user.first_name || 'Пользователь';
+                    const user = tg.initDataUnsafe.user;
+                    TELEGRAM_USER_ID = user.id.toString();
+                    document.getElementById('user-name').textContent = user.first_name || 'Пользователь';
+
+                    // Аватарка пользователя
+                    const avatarContainer = document.getElementById('header-avatar-container');
+                    if (user.photo_url) {
+                        avatarContainer.innerHTML = `<img src="${user.photo_url}" class="user-avatar" alt="Аватар">`;
+                    } else {
+                        avatarContainer.textContent = '💰';
+                    }
                 }
                 tg.onEvent('themeChanged', applyTelegramTheme);
             }
+
             loadData();
             await loadRates();
             await renderBalance();
