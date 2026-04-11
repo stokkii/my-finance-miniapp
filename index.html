@@ -18,7 +18,7 @@
         .section { animation: fadeIn 0.3s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Красивый градиент хедера: фиолетовый → оранжевый → красный */
+        /* Градиент хедера: фиолетовый → оранжевый → красный */
         #header {
             background: linear-gradient(to right, #7c3aed, #f97316, #ef4444);
             color: white;
@@ -39,7 +39,6 @@
             font-weight: 600; 
         }
 
-        /* Уменьшенные кнопки Доход / Расход */
         .action-button {
             padding: 1.05rem 1rem;
             min-height: 108px;
@@ -84,7 +83,7 @@
     </style>
 </head>
 <body>
-    <!-- HEADER с новым градиентом -->
+    <!-- HEADER -->
     <div id="header" class="flex items-center justify-between shadow-lg">
         <div class="flex items-center gap-3">
             <div id="header-avatar-container" class="w-9 h-9 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">💰</div>
@@ -738,6 +737,7 @@
             }
         }
 
+        // ====================== ИНИЦИАЛИЗАЦИЯ ======================
         async function initApp() {
             const tg = window.Telegram?.WebApp;
             if (!tg) {
@@ -777,7 +777,7 @@
             switchPage(1);
             populateConverterSelects();
             convertCurrency();
-            showToast('Приложение успешно запущено ✅');
+            // Убрано showToast('Приложение успешно запущено ✅');
         }
 
         window.onload = initApp;
